@@ -35,6 +35,11 @@ Always-on bridge that listens for Nostr encrypted DMs from trusted pubkeys and f
    ```
 4. Responses include `session: <thread-id>` plus the latest Codex message (truncated to `max_reply_chars`).
 
+## Install
+- From source: `go install github.com/joelklabo/nostr-codex-runner/cmd/runner@latest`
+- From release binaries (macOS/Linux amd64/arm64): grab the asset from the GitHub Releases page, `chmod +x nostr-codex-runner-*`, and run `./nostr-codex-runner --config config.yaml`.
+- Docker image is not published yet; use the binary or source builds above.
+
 ### Web UI (local)
 - Default: enabled at `http://127.0.0.1:8080`.
 - Create epics or issues, edit existing items, and pick which project they belong to via a dropdown.
