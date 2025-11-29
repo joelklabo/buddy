@@ -299,7 +299,7 @@ func printBanner(cfg *config.Config, pubKey string, version string) {
 	borderBot := fmt.Sprintf("%s╚%s╝%s", mag, strings.Repeat("═", innerWidth+2), reset)
 
 	fmt.Println(borderTop)
-	fmt.Printf("%s║ %s%s%s║%s\n", mag, reset, center(title, innerWidth), mag, reset)
+	fmt.Printf("%s║%s%s%s║%s\n", mag, reset, center(title, innerWidth), mag, reset)
 	fmt.Println(borderMid)
 	for _, l := range lines {
 		plain := fmt.Sprintf("%s %s", l.label, l.value)
@@ -308,7 +308,7 @@ func printBanner(cfg *config.Config, pubKey string, version string) {
 			pad = 0
 		}
 		visible := fmt.Sprintf("%s%s %s%s", gray, l.label, cyan, l.value)
-		fmt.Printf("%s║ %s%s%s%s║%s\n", mag, visible, reset, strings.Repeat(" ", pad), mag, reset)
+		fmt.Printf("%s║%s%s%s%s║%s\n", mag, visible, reset, strings.Repeat(" ", pad), mag, reset)
 	}
 	fmt.Println(borderBot)
 	fmt.Printf("%sTip:%s DM /help to see commands.\n", gray, reset)
