@@ -81,7 +81,8 @@ The runner only needs outbound internet to talk to Nostr relays. If you want she
 
 ## Background service (macOS-friendly)
 - tmux: `tmux new -s codex-runner 'cd /Users/honk/code/nostr-codex-runner && make run'`
-- launchd: create `~/Library/LaunchAgents/com.honk.nostr-codex-runner.plist`:
+- launchd (recommended for “always on”):
+  - Make sure Codex and Node are on PATH (Homebrew defaults live in `/opt/homebrew/bin`). Either set `codex.binary` in `config.yaml` to an absolute path or pass PATH via the plist, e.g.:
   ```xml
   <?xml version="1.0" encoding="UTF-8"?>
   <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -90,11 +91,16 @@ The runner only needs outbound internet to talk to Nostr relays. If you want she
     <key>Label</key><string>com.honk.nostr-codex-runner</string>
     <key>ProgramArguments</key>
     <array>
-      <string>/usr/bin/env</string>
-      <string>bash</string>
-      <string>-lc</string>
-      <string>cd /Users/honk/code/nostr-codex-runner && CONFIG=/Users/honk/code/nostr-codex-runner/config.yaml make run</string>
+      <string>/Users/honk/bin/nostr-codex-runner</string>
+      <string>-config</string>
+      <string>/Users/honk/code/nostr-codex-runner/config.yaml</string>
     </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PATH</key>
+      <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    <key>WorkingDirectory</key><string>/Users/honk/code/nostr-codex-runner</string>
     <key>RunAtLoad</key><true/>
     <key>KeepAlive</key><true/>
     <key>StandardOutPath</key><string>/Users/honk/Library/Logs/nostr-codex-runner.log</string>
@@ -102,7 +108,11 @@ The runner only needs outbound internet to talk to Nostr relays. If you want she
   </dict>
   </plist>
   ```
-  Load with `launchctl load ~/Library/LaunchAgents/com.honk.nostr-codex-runner.plist`.
+  Load/restart:
+  ```
+  launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.honk.nostr-codex-runner.plist
+  launchctl kickstart -k gui/$(id -u)/com.honk.nostr-codex-runner
+  ```
 
 ## Architecture (short)
 - **Nostr client**: subscribes to kind-4 DMs from allowlisted authors to runner pubkey; decrypts via NIP-04; deduplicates per-event ID.
