@@ -187,6 +187,11 @@ func (c *Config) applyDefaults(baseDir string) {
 			c.Projects[i].Path = abs
 		}
 	}
+	if c.Storage.Path == "" {
+		if home, err := os.UserHomeDir(); err == nil {
+			c.Storage.Path = filepath.Join(home, ".nostr-codex", "state.db")
+		}
+	}
 	// Normalize allowed pubkeys to lowercase hex.
 	for i, pk := range c.Runner.AllowedPubkeys {
 		c.Runner.AllowedPubkeys[i] = normalizePubkey(pk)
