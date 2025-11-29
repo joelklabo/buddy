@@ -25,7 +25,7 @@ jobs:
       - name: Download modules
         run: go mod download
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: v2.6.2
           install-mode: go   # build with the configured Go toolchain to match stdlib export data
