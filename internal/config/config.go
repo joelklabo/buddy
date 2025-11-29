@@ -132,6 +132,9 @@ func (c *Config) applyDefaults(baseDir string) {
 	if c.Runner.SessionTimeoutMins == 0 {
 		c.Runner.SessionTimeoutMins = 240
 	}
+	if strings.TrimSpace(c.Runner.InitialPrompt) == "" {
+		c.Runner.InitialPrompt = "You are an AI agent with shell access to this machine via Codex. Be concise, be careful, and always explain what you plan to do before running commands. Ask for confirmation before risky actions."
+	}
 	if c.Runner.ProfileName == "" {
 		c.Runner.ProfileName = "nostr-codex-runner"
 	}
