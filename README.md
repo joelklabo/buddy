@@ -44,6 +44,11 @@ Always-on bridge that listens for Nostr encrypted DMs from trusted pubkeys and f
 - From source: `go install github.com/joelklabo/nostr-codex-runner/cmd/runner@latest`
 - From release binaries (macOS/Linux amd64/arm64): grab the asset from the GitHub Releases page, `chmod +x nostr-codex-runner-*`, and run `./nostr-codex-runner --config config.yaml`.
 - Docker image is not published yet; use the binary or source builds above.
+- One-liner installer (downloads latest release to `~/.local/bin` and copies `config.example.yaml` → `config.yaml` if missing):
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/joelklabo/nostr-codex-runner/main/scripts/install.sh | bash
+  ```
+  Customize with env vars: `INSTALL_DIR`, `CONFIG_DIR`, `VERSION` (tag or `latest`).
 
 ## Running it remotely / outside your LAN
 The runner only needs outbound internet to talk to Nostr relays, but you may want to reach the web UI while away from home. Recommended options:
