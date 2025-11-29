@@ -28,5 +28,6 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.60.1
+          skip-cache: true
       - name: Run golangci-lint
-        run: golangci-lint run ./...
+        run: golangci-lint run --modules-download-mode=mod ./...
