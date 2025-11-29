@@ -35,12 +35,18 @@ Always-on bridge that listens for Nostr encrypted DMs from trusted pubkeys and f
    ```
 4. Responses include `session: <thread-id>` plus the latest Codex message (truncated to `max_reply_chars`).
 
+### Web UI (local)
+- Default: enabled at `http://127.0.0.1:8080`.
+- Create epics or issues, edit existing items, and pick which project they belong to via a dropdown.
+- Projects come from `projects` in `config.yaml` (each `path` should contain the `.beads` directory for that repo).
+
 ## Configuration reference
 `config.example.yaml` documents every field. Key knobs:
 - `relays`: list of relay URLs to connect to.
 - `runner.allowed_pubkeys`: access control.
 - `runner.session_timeout_minutes`: idle cutoff before discarding a session mapping.
 - `codex.*`: CLI flags for Codex (sandbox, approval policy, working dir (defaults to your home), extra args, timeout).
+- `ui.*`: toggle and address for the local UI; update `projects` to expose multiple bd workspaces in the dropdown.
 - `storage.path`: BoltDB file for state.
 - `logging.level`: `debug|info|warn|error`.
 

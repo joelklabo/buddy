@@ -27,3 +27,13 @@ storage:
 
 logging:
   level: "info"
+
+ui:
+  enable: true
+  addr: "127.0.0.1:8080"
+
+# Projects the UI can write to (path should contain .beads)
+projects:
+  - id: "default"
+    name: "Nostr Codex Runner"
+    path: "."

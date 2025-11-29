@@ -18,6 +18,7 @@ import (
 	"nostr-codex-runner/internal/config"
 	"nostr-codex-runner/internal/nostrclient"
 	"nostr-codex-runner/internal/store"
+	"nostr-codex-runner/internal/ui"
 )
 
 func main() {
@@ -59,19 +60,26 @@ func main() {
 
 	logger.Info("nostr-codex-runner starting", slog.String("pubkey", pubKey), slog.Any("relays", cfg.Relays))
 
-	errCh := make(chan error, 1)
+	errCh := make(chan error, 2)
 	go func() {
 		errCh <- client.Listen(ctx, func(msgCtx context.Context, msg nostrclient.IncomingMessage) {
 			go handleMessage(msgCtx, logger, runner, client, st, cfg, msg)
 		})
 	}()
 
+	if cfg.UI.Enable {
+		uiServer := ui.New(cfg, logger)
+		go func() {
+			errCh <- uiServer.Start(ctx)
+		}()
+	}
+
 	select {
 	case <-ctx.Done():
 		logger.Info("shutdown requested")
 	case err := <-errCh:
 		if !errors.Is(err, context.Canceled) {
-			fatalf("nostr listener error: %v", err)
+			fatalf("runtime error: %v", err)
 		}
 	}
 }

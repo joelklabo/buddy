@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/nbd-wtf/go-nostr"
@@ -12,11 +13,13 @@ import (
 
 // Config holds the runtime configuration loaded from config.yaml.
 type Config struct {
-	Relays  []string      `yaml:"relays"`
-	Runner  RunnerConfig  `yaml:"runner"`
-	Codex   CodexConfig   `yaml:"codex"`
-	Storage StorageConfig `yaml:"storage"`
-	Logging LoggingConfig `yaml:"logging"`
+	Relays   []string      `yaml:"relays"`
+	Runner   RunnerConfig  `yaml:"runner"`
+	Codex    CodexConfig   `yaml:"codex"`
+	Storage  StorageConfig `yaml:"storage"`
+	Logging  LoggingConfig `yaml:"logging"`
+	UI       UIConfig      `yaml:"ui"`
+	Projects []Project     `yaml:"projects"`
 }
 
 // RunnerConfig controls Nostr-facing behaviour.
@@ -50,6 +53,19 @@ type LoggingConfig struct {
 	Level string `yaml:"level"`
 }
 
+// UIConfig controls the optional local web UI server.
+type UIConfig struct {
+	Enable bool   `yaml:"enable"`
+	Addr   string `yaml:"addr"`
+}
+
+// Project represents a bd workspace (path containing a .beads dir).
+type Project struct {
+	ID   string `yaml:"id"`
+	Name string `yaml:"name"`
+	Path string `yaml:"path"`
+}
+
 // Load reads and validates configuration from the provided path.
 func Load(path string) (*Config, error) {
 	raw, err := os.ReadFile(path)
@@ -62,7 +78,8 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("parse config: %w", err)
 	}
 
-	cfg.applyDefaults()
+	baseDir := filepath.Dir(path)
+	cfg.applyDefaults(baseDir)
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
@@ -98,10 +115,18 @@ func (c *Config) Validate() error {
 	if c.Storage.Path == "" {
 		return errors.New("storage.path is required")
 	}
+	if len(c.Projects) == 0 {
+		return errors.New("at least one project must be configured")
+	}
+	for _, p := range c.Projects {
+		if p.Path == "" {
+			return fmt.Errorf("project %s has empty path", p.ID)
+		}
+	}
 	return nil
 }
 
-func (c *Config) applyDefaults() {
+func (c *Config) applyDefaults(baseDir string) {
 	if c.Runner.MaxReplyChars == 0 {
 		c.Runner.MaxReplyChars = 8000
 	}
@@ -129,6 +154,35 @@ func (c *Config) applyDefaults() {
 	}
 	if c.Logging.Level == "" {
 		c.Logging.Level = "info"
+	}
+	if c.UI.Addr == "" {
+		c.UI.Addr = "127.0.0.1:8080"
+	}
+	// Default UI enabled.
+	if !c.UI.Enable {
+		c.UI.Enable = true
+	}
+
+	if len(c.Projects) == 0 {
+		wd := baseDir
+		if abs, err := filepath.Abs(wd); err == nil {
+			wd = abs
+		}
+		c.Projects = []Project{{ID: "default", Name: "Default", Path: wd}}
+	}
+	for i := range c.Projects {
+		if c.Projects[i].ID == "" {
+			c.Projects[i].ID = fmt.Sprintf("project-%d", i+1)
+		}
+		if c.Projects[i].Name == "" {
+			c.Projects[i].Name = c.Projects[i].ID
+		}
+		if c.Projects[i].Path == "" {
+			c.Projects[i].Path = baseDir
+		}
+		if abs, err := filepath.Abs(c.Projects[i].Path); err == nil {
+			c.Projects[i].Path = abs
+		}
 	}
 	// Ensure keys are lowercase to avoid mismatches.
 	for i, pk := range c.Runner.AllowedPubkeys {
