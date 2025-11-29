@@ -3,6 +3,8 @@ package store
 import (
 	"encoding/json"
 	"errors"
+	"os"
+	"path/filepath"
 	"time"
 
 	bolt "go.etcd.io/bbolt"
@@ -27,6 +29,9 @@ type Store struct {
 
 // New opens (or creates) the database at the given path.
 func New(path string) (*Store, error) {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return nil, err
+	}
 	db, err := bolt.Open(path, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return nil, err
