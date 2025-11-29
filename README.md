@@ -1,73 +1,97 @@
 # Nostr Codex Runner
 
-Always-on service that listens for Nostr DMs from trusted pubkeys and pipes their content into `codex exec`, preserving Codex session IDs so you can continue conversations via Nostr.
+Always-on bridge that listens for Nostr encrypted DMs from trusted pubkeys and feeds them into `codex exec`, keeping Codex session threads alive so you can work entirely over Nostr.
 
-## Features
-- Subscribes to encrypted DMs (`kind 4`) addressed to the runner key and authored by an allowlist of pubkeys.
-- Command mini-DSL:
-  - `/new [prompt]` reset active session; optional prompt starts a fresh Codex session.
-  - `/use <session-id>` switch to an existing Codex session.
-  - `/status` show the active session.
-  - `/help` usage recap.
-  - Anything else is treated as a prompt and run in the active session (or creates a new one).
-- Persists active session per sender (Bolt DB) and expires it after a configurable idle window.
-- Replies via Nostr DM with the Codex session ID and last agent message (truncated to `max_reply_chars`).
+## Why
+- Stay keyboard-only and remote: send prompts via Nostr DMs, get Codex replies back as DMs.
+- Keep conversation context: runner tracks Codex `thread_id` per sender and resumes automatically.
+- Minimal surface area: single binary, YAML config, and one background process.
+
+## Command mini-DSL (DM payloads)
+- `/new [prompt]` — reset session; optional prompt starts a fresh Codex session.
+- `/use <session-id>` — switch to an existing Codex session.
+- `/status` — show your active session and last update time.
+- `/help` — recap commands.
+- _Anything else_ — treated as a prompt and executed in your active session (or a new one if none).
 
 ## Quick start
-1) Copy `config.example.yaml` to `config.yaml` and fill in secrets:
-   - `runner.private_key`: hex nostr sk (nsec) for the runner.
-   - `runner.allowed_pubkeys`: pubkeys that are allowed to issue commands.
-   - Adjust relays, working directory for Codex, etc.
-2) Run locally:
-```bash
-make run             # uses config.yaml
-# or
-CONFIG=path/to/config.yaml ./scripts/run.sh
-```
-3) Send an encrypted DM from an allowed pubkey to the runner's pubkey. Example payloads:
-```
-/new
-/new Write a Go HTTP server that echoes requests.
-List the last 5 git commits in this repo.
-/status
-```
+1. Copy `config.example.yaml` → `config.yaml` and fill secrets:
+   - `runner.private_key` — hex Nostr secret key (nsec).
+   - `runner.allowed_pubkeys` — list of pubkeys allowed to control the runner.
+   - Adjust relays, Codex working directory, timeouts, etc.
+2. Run locally:
+   ```bash
+   make run              # uses config.yaml
+   # or
+   CONFIG=path/to/config.yaml ./scripts/run.sh
+   ```
+3. DM the runner pubkey from an allowed pubkey. Examples:
+   ```
+   /new
+   /new Write a Go HTTP server that echoes requests.
+   List the last 5 git commits in this repo.
+   /status
+   ```
+4. Responses include `session: <thread-id>` plus the latest Codex message (truncated to `max_reply_chars`).
 
-## Background service options (macOS-friendly)
-- **tmux/screen:** `tmux new -s codex-runner 'cd /Users/honk/code/nostr-codex-runner && make run'`
-- **launchd:** create `~/Library/LaunchAgents/com.honk.nostr-codex-runner.plist`:
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key><string>com.honk.nostr-codex-runner</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>/usr/bin/env</string>
-    <string>bash</string>
-    <string>-lc</string>
-    <string>cd /Users/honk/code/nostr-codex-runner && CONFIG=/Users/honk/code/nostr-codex-runner/config.yaml make run</string>
-  </array>
-  <key>RunAtLoad</key><true/>
-  <key>KeepAlive</key><true/>
-  <key>StandardOutPath</key><string>/Users/honk/Library/Logs/nostr-codex-runner.log</string>
-  <key>StandardErrorPath</key><string>/Users/honk/Library/Logs/nostr-codex-runner.err</string>
-</dict>
-</plist>
-```
-Load it with `launchctl load ~/Library/LaunchAgents/com.honk.nostr-codex-runner.plist`.
+## Configuration reference
+`config.example.yaml` documents every field. Key knobs:
+- `relays`: list of relay URLs to connect to.
+- `runner.allowed_pubkeys`: access control.
+- `runner.session_timeout_minutes`: idle cutoff before discarding a session mapping.
+- `codex.*`: CLI flags for Codex (sandbox, approval policy, working dir, extra args, timeout).
+- `storage.path`: BoltDB file for state.
+- `logging.level`: `debug|info|warn|error`.
 
-## Implementation notes
-- Go 1.25 with [`go-nostr`](https://github.com/nbd-wtf/go-nostr) for relay connectivity and NIP-04 encryption.
-- Lightweight persistence via BoltDB (`storage.path`, default `state.db`).
-- Codex integration uses `codex exec --json` and captures `thread_id` as the Codex session id. Replies stream the last `agent_message` text.
-- Session inactivity timeout (`session_timeout_minutes`) automatically discards stale sessions.
+## Background service (macOS-friendly)
+- tmux: `tmux new -s codex-runner 'cd /Users/honk/code/nostr-codex-runner && make run'`
+- launchd: create `~/Library/LaunchAgents/com.honk.nostr-codex-runner.plist`:
+  ```xml
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0">
+  <dict>
+    <key>Label</key><string>com.honk.nostr-codex-runner</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>/usr/bin/env</string>
+      <string>bash</string>
+      <string>-lc</string>
+      <string>cd /Users/honk/code/nostr-codex-runner && CONFIG=/Users/honk/code/nostr-codex-runner/config.yaml make run</string>
+    </array>
+    <key>RunAtLoad</key><true/>
+    <key>KeepAlive</key><true/>
+    <key>StandardOutPath</key><string>/Users/honk/Library/Logs/nostr-codex-runner.log</string>
+    <key>StandardErrorPath</key><string>/Users/honk/Library/Logs/nostr-codex-runner.err</string>
+  </dict>
+  </plist>
+  ```
+  Load with `launchctl load ~/Library/LaunchAgents/com.honk.nostr-codex-runner.plist`.
 
-## Security tips
-- Keep `config.yaml` out of version control (already in `.gitignore`).
-- Use relays you trust; consider running a private relay.
-- Restrict `allowed_pubkeys` to yourself while testing.
+## Architecture (short)
+- **Nostr client**: subscribes to kind-4 DMs from allowlisted authors to runner pubkey; decrypts via NIP-04; deduplicates per-event ID.
+- **Command router**: parses the mini-DSL; manages per-sender active session stored in BoltDB with idle expiry.
+- **Codex runner**: shells out to `codex exec --json`, captures `thread_id` and latest `agent_message`.
+- **Reply**: sends encrypted DM back with session id and truncated message.
 
-## bd workflow
-- Repo already has an epic (`nostr-codex-runner-2zo`) and feature issue (`nostr-codex-runner-2zo.1`).
-- Follow-up work should be recorded via `bd create --parent nostr-codex-runner-2zo ...`, and commits should reference/close the relevant issue.
+## Development
+- Requirements: Go ≥1.22, Codex CLI installed and on PATH.
+- Commands:
+  - `make run` — start the service (uses `config.yaml`).
+  - `make build` — build binary to `bin/nostr-codex-runner`.
+  - `make lint` — `go vet ./...`.
+  - `go test ./...` — run tests (currently none; add as you extend).
+- Formatting: `gofmt -w` on Go files before committing.
+- Issue workflow: use `bd` (`bd create --parent nostr-codex-runner-2zo ...`) and close issues with a commit per issue.
+
+## Security
+- Keep `config.yaml` and keys private (already in `.gitignore`).
+- Use trusted relays; consider a private relay for production.
+- Limit `allowed_pubkeys` to operators you trust.
+- Report vulnerabilities via a private GitHub security advisory (see `SECURITY.md`).
+
+## Contributing
+See `CONTRIBUTING.md` for how to propose changes, run checks, and follow the `bd`/commit conventions.
+
+## License
+MIT — see `LICENSE`.
