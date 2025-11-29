@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -34,8 +34,27 @@ jobs:
           path: dist/nostr-codex-runner-${{ matrix.goos }}-${{ matrix.goarch }}
           if-no-files-found: error
 
+  checksums:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Generate checksums
+        run: |
+          cd dist
+          find . -type f -maxdepth 2 -mindepth 2 -exec mv {} . \;
+          sha256sum * > SHA256SUMS
+      - name: Upload checksums artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: checksums
+          path: dist/SHA256SUMS
+
   publish:
-    needs: build-and-release
+    needs: [build, checksums]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
