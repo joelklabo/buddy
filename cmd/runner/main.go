@@ -398,6 +398,24 @@ func humanBytes(b uint64) string {
 }
 
 func runRaw(ctx context.Context, cfg *config.Config, command string) (string, int) {
+	// First attempt with provided command.
+	body, exitCode := runRawOnce(ctx, cfg, command)
+	if exitCode == 127 && looksLikePython(command) && !strings.Contains(command, "python3") {
+		alt := replacePythonWithPython3(command)
+		altBody, altCode := runRawOnce(ctx, cfg, alt)
+		if altCode == 0 {
+			body = fmt.Sprintf("%s\n(auto-retied with python3)\n%s", body, altBody)
+			exitCode = 0
+		} else {
+			body = fmt.Sprintf("%s\n(auto-retry with python3 also failed: exit=%d)\n%s", body, altCode, altBody)
+			exitCode = altCode
+		}
+	}
+	body = truncate(body, cfg.Runner.MaxReplyChars)
+	return fmt.Sprintf("/raw exit=%d\n%s", exitCode, body), exitCode
+}
+
+func runRawOnce(ctx context.Context, cfg *config.Config, command string) (string, int) {
 	ctx, cancel := runnerTimeout(ctx, cfg)
 	defer cancel()
 
@@ -424,9 +442,7 @@ func runRaw(ctx context.Context, cfg *config.Config, command string) (string, in
 			body = "(no output)"
 		}
 	}
-
-	body = truncate(body, cfg.Runner.MaxReplyChars)
-	return fmt.Sprintf("/raw exit=%d\n%s", exitCode, body), exitCode
+	return body, exitCode
 }
 
 func runnerTimeout(parent context.Context, cfg *config.Config) (context.Context, context.CancelFunc) {
@@ -536,6 +552,19 @@ func tailLog(path string, maxBytes int64) string {
 func sessionMeta(cfg *config.Config, version string) string {
 	return fmt.Sprintf("runner pid=%d • host=%s • started=%s • cwd=%s • version=%s",
 		runnerPID, hostName, processStart.Format(time.RFC3339), cfg.Codex.WorkingDir, version)
+}
+
+func looksLikePython(cmd string) bool {
+	c := strings.TrimSpace(cmd)
+	return strings.HasPrefix(c, "python ") || c == "python" || strings.HasPrefix(c, "python\t")
+}
+
+func replacePythonWithPython3(cmd string) string {
+	c := strings.TrimLeft(cmd, " \t")
+	if strings.HasPrefix(c, "python") {
+		return strings.Replace(cmd, "python", "python3", 1)
+	}
+	return cmd
 }
 
 func fatalf(msg string, args ...any) {
