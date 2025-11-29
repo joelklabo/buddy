@@ -28,13 +28,9 @@ storage:
 
 logging:
   level: "info"
+  file: "~/.nostr-codex/runner.log"  # optional file log in addition to stdout
 
-ui:
-  enable: true
-  addr: "127.0.0.1:8080"
-  auth_token: ""        # set to require Authorization: Bearer <token> in UI/API
-
-# Projects the UI can write to (path should contain .beads)
+# Projects for bd workspaces (path should contain .beads)
 projects:
   - id: "default"
     name: "Nostr Codex Runner"

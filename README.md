@@ -48,7 +48,6 @@ Always-on bridge that listens for Nostr encrypted DMs from trusted pubkeys and f
 - `make lint` – `go vet ./...`.
 - `make fmt` – `gofmt -w cmd internal`.
 - `make install` – `go install ./cmd/runner`.
-- `make tunnel` – launch Cloudflare tunnel to the UI (`UI_ADDR` env, default `127.0.0.1:8080`).
 
 ## Install
 - From source: `go install github.com/joelklabo/nostr-codex-runner/cmd/runner@latest`
@@ -63,18 +62,7 @@ Always-on bridge that listens for Nostr encrypted DMs from trusted pubkeys and f
  - Full-access Codex: config sets `sandbox: danger-full-access`, `approval: never`, and `extra_args: ["--dangerously-bypass-approvals-and-sandbox"]` to give the agent unrestricted system access. Keep this only on trusted machines.
 
 ## Running it remotely / outside your LAN
-The runner only needs outbound internet to talk to Nostr relays, but you may want to reach the web UI while away from home. Recommended options:
-- **Cloudflare Tunnel (no port-forwarding):** install `cloudflared` and run the helper script below to expose the UI securely without opening firewall ports.
-- **Tailscale (private mesh):** install Tailscale on your laptop and phone; reach the UI via the machine’s tailnet IP and `ui.addr`. No extra config needed in this project.
-- **Port forwarding (least safe):** forward `ui.addr` port from your router and set `ui.auth_token`; also restrict to a single allowlisted IP if your router supports it.
-
-Cloudflare tunnel helper (macOS/Linux):
-```bash
-brew install cloudflared   # or: wget https://github.com/cloudflare/cloudflared/releases/...
-./scripts/cloudflared-tunnel.sh
-# prints a public https URL you can open to reach the UI
-```
-Make sure `ui.auth_token` is set in `config.yaml` when exposing the UI.
+The runner only needs outbound internet to talk to Nostr relays. If you want shell-level access when away from home, rely on `/raw` over DMs or your own VPN/Tailscale/SSH setup; there is no web UI anymore.
 
 ## Quick links
 - [Releases](https://github.com/joelklabo/nostr-codex-runner/releases)
@@ -82,21 +70,12 @@ Make sure `ui.auth_token` is set in `config.yaml` when exposing the UI.
 - [CI workflow](https://github.com/joelklabo/nostr-codex-runner/actions/workflows/ci.yml)
 - [Release workflow](https://github.com/joelklabo/nostr-codex-runner/actions/workflows/release.yml)
 
-### Web UI (local)
-- Default: enabled at `http://127.0.0.1:8080`.
-- Create epics or issues, edit existing items, and pick which project they belong to via a dropdown.
-- Labels: add labels on create; add/remove labels on edit.
-- Filtering: issue list can be filtered by status from the UI.
-- Auth: set `ui.auth_token` in `config.yaml` to require `Authorization: Bearer <token>` for all UI/API calls (recommended if you expose the port beyond localhost).
-- Projects come from `projects` in `config.yaml` (each `path` should contain the `.beads` directory for that repo).
-
 ## Configuration reference
 `config.example.yaml` documents every field. Key knobs:
 - `relays`: list of relay URLs to connect to.
 - `runner.allowed_pubkeys`: access control.
 - `runner.session_timeout_minutes`: idle cutoff before discarding a session mapping.
 - `codex.*`: CLI flags for Codex (sandbox, approval policy, working dir (defaults to your home), extra args, timeout).
-- `ui.*`: toggle/address for the local UI, optional `auth_token`; update `projects` to expose multiple bd workspaces in the dropdown.
 - `storage.path`: BoltDB file for state.
 - `logging.level`: `debug|info|warn|error`.
 
