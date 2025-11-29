@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"runtime/debug"
 	"strings"
 	"syscall"
 	"time"
@@ -19,6 +20,8 @@ import (
 	"nostr-codex-runner/internal/nostrclient"
 	"nostr-codex-runner/internal/store"
 	"nostr-codex-runner/internal/ui"
+
+	"github.com/nbd-wtf/go-nostr/nip19"
 )
 
 func main() {
@@ -29,6 +32,8 @@ func main() {
 	if err != nil {
 		fatalf("load config: %v", err)
 	}
+
+	version := buildVersion()
 
 	level := slog.LevelInfo
 	switch strings.ToLower(cfg.Logging.Level) {
@@ -46,7 +51,7 @@ func main() {
 		fatalf("derive pubkey: %v", err)
 	}
 
-	printBanner(cfg, pubKey)
+	printBanner(cfg, pubKey, version)
 
 	st, err := store.New(cfg.Storage.Path)
 	if err != nil {
@@ -203,7 +208,7 @@ func helpText() string {
 		"(any other text runs as a prompt in your active session)"
 }
 
-func printBanner(cfg *config.Config, pubKey string) {
+func printBanner(cfg *config.Config, pubKey string, version string) {
 	if !isTTY() {
 		return
 	}
@@ -213,10 +218,18 @@ func printBanner(cfg *config.Config, pubKey string) {
 	gray := "\033[90m"
 	reset := "\033[0m"
 
+	nsec := "(hidden)"
+	if cfg.Runner.PrivateKey != "" {
+		if enc, err := nostrEncodeNsec(cfg.Runner.PrivateKey); err == nil {
+			nsec = enc
+		}
+	}
+
 	fmt.Printf("%s╔══════════════════════════════════════════════════════╗%s\n", mag, reset)
 	fmt.Printf("%s║%s  nostr-codex-runner                             %s║%s\n", mag, reset, mag, reset)
 	fmt.Printf("%s╠══════════════════════════════════════════════════════╣%s\n", mag, reset)
 	fmt.Printf("%s║%s pubkey  %s%s%s\n", mag, reset, cyan, pubKey, reset)
+	fmt.Printf("%s║%s nsec    %s%s%s\n", mag, reset, cyan, nsec, reset)
 	fmt.Printf("%s║%s relays  %s%s%s\n", mag, reset, cyan, strings.Join(cfg.Relays, ", "), reset)
 	uiStatus := "off"
 	if cfg.UI.Enable {
@@ -224,8 +237,10 @@ func printBanner(cfg *config.Config, pubKey string) {
 	}
 	fmt.Printf("%s║%s ui      %s%s%s\n", mag, reset, cyan, uiStatus, reset)
 	fmt.Printf("%s║%s cwd     %s%s%s\n", mag, reset, cyan, cfg.Codex.WorkingDir, reset)
+	fmt.Printf("%s║%s version %s%s%s\n", mag, reset, cyan, version, reset)
 	fmt.Printf("%s╚══════════════════════════════════════════════════════╝%s\n", mag, reset)
-	fmt.Printf("%sTip:%s DM /help or visit the UI to create issues.\n%s\n", gray, reset, reset)
+	fmt.Printf("%sTip:%s DM /help or visit the UI to create issues.\n", gray, reset)
+	fmt.Printf("%sTMUX:%s tmux attach -t nostr-runner (logs to stdout)\n%s\n", gray, reset, reset)
 }
 
 func isTTY() bool {
@@ -234,6 +249,21 @@ func isTTY() bool {
 		return false
 	}
 	return (fi.Mode() & os.ModeCharDevice) != 0
+}
+
+func buildVersion() string {
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+		return info.Main.Version
+	}
+	return "dev"
+}
+
+func nostrEncodeNsec(sk string) (string, error) {
+	enc, err := nip19.EncodePrivateKey(sk)
+	if err != nil {
+		return "", err
+	}
+	return enc, nil
 }
 
 func runRaw(ctx context.Context, cfg *config.Config, command string) string {
