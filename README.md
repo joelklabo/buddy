@@ -40,6 +40,15 @@ Always-on bridge that listens for Nostr encrypted DMs from trusted pubkeys and f
    ```
 4. Responses include `session: <thread-id>` plus the latest Codex message (truncated to `max_reply_chars`).
 
+### Make targets
+- `make run` – start with `config.yaml` (override `CONFIG=...`).
+- `make build` – build to `bin/nostr-codex-runner` (override `BIN=...`).
+- `make test` – run `go test ./...`.
+- `make lint` – `go vet ./...`.
+- `make fmt` – `gofmt -w cmd internal`.
+- `make install` – `go install ./cmd/runner`.
+- `make tunnel` – launch Cloudflare tunnel to the UI (`UI_ADDR` env, default `127.0.0.1:8080`).
+
 ## Install
 - From source: `go install github.com/joelklabo/nostr-codex-runner/cmd/runner@latest`
 - From release binaries (macOS/Linux amd64/arm64): grab the asset from the GitHub Releases page, `chmod +x nostr-codex-runner-*`, and run `./nostr-codex-runner --config config.yaml`.
