@@ -67,7 +67,11 @@ func main() {
 			fatalf("open log file: %v", err)
 		}
 		writers = append(writers, logFile)
-		defer logFile.Close()
+		defer func() {
+			if err := logFile.Close(); err != nil {
+				fmt.Fprintf(os.Stderr, "close log file: %v\n", err)
+			}
+		}()
 	}
 	logger := slog.New(slog.NewTextHandler(io.MultiWriter(writers...), &slog.HandlerOptions{Level: level}))
 
@@ -82,7 +86,11 @@ func main() {
 	if err != nil {
 		fatalf("open store: %v", err)
 	}
-	defer st.Close()
+	defer func() {
+		if err := st.Close(); err != nil {
+			logger.Error("failed to close store", slog.String("err", err.Error()))
+		}
+	}()
 
 	runner := codex.New(cfg.Codex)
 	client := nostrclient.New(cfg.Runner.PrivateKey, pubKey, cfg.Relays, cfg.Runner.AllowedPubkeys, st)
@@ -508,7 +516,7 @@ func tailLog(path string, maxBytes int64) string {
 	if err != nil {
 		return fmt.Sprintf("(log unreadable: %v)", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	stat, err := f.Stat()
 	if err != nil {
