@@ -45,6 +45,20 @@ Always-on bridge that listens for Nostr encrypted DMs from trusted pubkeys and f
 - From release binaries (macOS/Linux amd64/arm64): grab the asset from the GitHub Releases page, `chmod +x nostr-codex-runner-*`, and run `./nostr-codex-runner --config config.yaml`.
 - Docker image is not published yet; use the binary or source builds above.
 
+## Running it remotely / outside your LAN
+The runner only needs outbound internet to talk to Nostr relays, but you may want to reach the web UI while away from home. Recommended options:
+- **Cloudflare Tunnel (no port-forwarding):** install `cloudflared` and run the helper script below to expose the UI securely without opening firewall ports.
+- **Tailscale (private mesh):** install Tailscale on your laptop and phone; reach the UI via the machine’s tailnet IP and `ui.addr`. No extra config needed in this project.
+- **Port forwarding (least safe):** forward `ui.addr` port from your router and set `ui.auth_token`; also restrict to a single allowlisted IP if your router supports it.
+
+Cloudflare tunnel helper (macOS/Linux):
+```bash
+brew install cloudflared   # or: wget https://github.com/cloudflare/cloudflared/releases/...
+./scripts/cloudflared-tunnel.sh
+# prints a public https URL you can open to reach the UI
+```
+Make sure `ui.auth_token` is set in `config.yaml` when exposing the UI.
+
 ## Quick links
 - [Releases](https://github.com/joelklabo/nostr-codex-runner/releases)
 - [Open issues](https://github.com/joelklabo/nostr-codex-runner/issues)
