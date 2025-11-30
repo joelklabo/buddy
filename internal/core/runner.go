@@ -136,7 +136,7 @@ func (r *Runner) handleMessage(parent context.Context, msg InboundMessage) {
 	}
 
 	start := time.Now()
-	resp, err := r.agent.Generate(reqCtx, req)
+	resp, err := r.callAgentWithRetry(reqCtx, req, log)
 	if err != nil {
 		log.Error("agent error", slog.String("err", err.Error()))
 		return
@@ -186,7 +186,7 @@ func (r *Runner) handleMessage(parent context.Context, msg InboundMessage) {
 		log.Error("no transport for outbound", slog.String("transport", msg.Transport))
 		return
 	}
-	if err := tr.Send(reqCtx, outMsg); err != nil {
+	if err := r.sendWithRetry(reqCtx, tr, outMsg, log); err != nil {
 		log.Error("send error", slog.String("err", err.Error()))
 	}
 }
@@ -203,4 +203,38 @@ func joinStrings(parts []string, sep string) string {
 		out += sep + p
 	}
 	return out
+}
+
+func (r *Runner) callAgentWithRetry(ctx context.Context, req AgentRequest, log *slog.Logger) (AgentResponse, error) {
+	var resp AgentResponse
+	var agentErr error
+	err := retry(ctx, 3, func() error {
+		var err error
+		resp, err = r.agent.Generate(ctx, req)
+		if err != nil {
+			agentErr = err
+			log.Warn("agent retry", slog.String("err", err.Error()))
+		}
+		return err
+	})
+	if err != nil {
+		return resp, agentErr
+	}
+	return resp, nil
+}
+
+func (r *Runner) sendWithRetry(ctx context.Context, tr Transport, msg OutboundMessage, log *slog.Logger) error {
+	var sendErr error
+	err := retry(ctx, 3, func() error {
+		err := tr.Send(ctx, msg)
+		if err != nil {
+			sendErr = err
+			log.Warn("send retry", slog.String("err", err.Error()))
+		}
+		return err
+	})
+	if err != nil {
+		return sendErr
+	}
+	return nil
 }
