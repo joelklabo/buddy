@@ -18,6 +18,8 @@ var (
 	bucketCursor    = []byte("cursors")
 	bucketProcessed = []byte("processed")
 	bucketMessages  = []byte("messages")
+	bucketHistory   = []byte("history")
+	bucketAudit     = []byte("audit")
 )
 
 // SessionState represents the current Codex session for a sender.
@@ -52,6 +54,12 @@ func New(path string) (*Store, error) {
 			return err
 		}
 		if _, err := tx.CreateBucketIfNotExists(bucketMessages); err != nil {
+			return err
+		}
+		if _, err := tx.CreateBucketIfNotExists(bucketHistory); err != nil {
+			return err
+		}
+		if _, err := tx.CreateBucketIfNotExists(bucketAudit); err != nil {
 			return err
 		}
 		return nil
@@ -184,4 +192,115 @@ func (s *Store) RecentMessageSeen(sender, plaintext string, window time.Duration
 		return b.Put([]byte(key), []byte(now.Format(time.RFC3339Nano)))
 	})
 	return seen, err
+}
+
+// AppendHistory appends a turn to the history for a thread, trimming to maxEntries.
+func (s *Store) AppendHistory(threadID string, turn json.RawMessage, maxEntries int) error {
+	if threadID == "" {
+		return errors.New("thread id required")
+	}
+	if maxEntries <= 0 {
+		maxEntries = 50
+	}
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketHistory)
+		key := []byte(threadID)
+		var entries []json.RawMessage
+		if v := b.Get(key); v != nil {
+			_ = json.Unmarshal(v, &entries)
+		}
+		entries = append(entries, turn)
+		if len(entries) > maxEntries {
+			entries = entries[len(entries)-maxEntries:]
+		}
+		data, err := json.Marshal(entries)
+		if err != nil {
+			return err
+		}
+		return b.Put(key, data)
+	})
+}
+
+// History returns up to maxEntries of the thread history.
+func (s *Store) History(threadID string, maxEntries int) ([]json.RawMessage, error) {
+	if threadID == "" {
+		return nil, errors.New("thread id required")
+	}
+	if maxEntries <= 0 {
+		maxEntries = 50
+	}
+	var entries []json.RawMessage
+	err := s.db.View(func(tx *bolt.Tx) error {
+		if v := tx.Bucket(bucketHistory).Get([]byte(threadID)); v != nil {
+			_ = json.Unmarshal(v, &entries)
+			if len(entries) > maxEntries {
+				entries = entries[len(entries)-maxEntries:]
+			}
+		}
+		return nil
+	})
+	return entries, err
+}
+
+// AppendAudit records an action execution entry.
+func (s *Store) AppendAudit(action, sender, outcome string, dur time.Duration, maxEntries int) error {
+	if maxEntries <= 0 {
+		maxEntries = 200
+	}
+	type auditEntry struct {
+		Action   string    `json:"action"`
+		Sender   string    `json:"sender"`
+		Outcome  string    `json:"outcome"`
+		Duration int64     `json:"duration_ms"`
+		Time     time.Time `json:"time"`
+	}
+	entry := auditEntry{
+		Action:   action,
+		Sender:   sender,
+		Outcome:  outcome,
+		Duration: dur.Milliseconds(),
+		Time:     time.Now().UTC(),
+	}
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketAudit)
+		key := []byte("audit")
+		var entries []auditEntry
+		if v := b.Get(key); v != nil {
+			_ = json.Unmarshal(v, &entries)
+		}
+		entries = append(entries, entry)
+		if len(entries) > maxEntries {
+			entries = entries[len(entries)-maxEntries:]
+		}
+		data, err := json.Marshal(entries)
+		if err != nil {
+			return err
+		}
+		return b.Put(key, data)
+	})
+}
+
+// Audit returns up to maxEntries recent audit records.
+func (s *Store) Audit(maxEntries int) ([][]byte, error) {
+	if maxEntries <= 0 {
+		maxEntries = 200
+	}
+	var raw [][]byte
+	err := s.db.View(func(tx *bolt.Tx) error {
+		if v := tx.Bucket(bucketAudit).Get([]byte("audit")); v != nil {
+			var entries []json.RawMessage
+			if err := json.Unmarshal(v, &entries); err == nil {
+				if len(entries) > maxEntries {
+					entries = entries[len(entries)-maxEntries:]
+				}
+				for _, e := range entries {
+					cpy := make([]byte, len(e))
+					copy(cpy, e)
+					raw = append(raw, cpy)
+				}
+			}
+		}
+		return nil
+	})
+	return raw, err
 }
