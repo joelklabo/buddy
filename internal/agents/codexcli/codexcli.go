@@ -1,3 +1,4 @@
+// Package codexcli adapts the Codex CLI to the agent interface.
 package codexcli
 
 import (

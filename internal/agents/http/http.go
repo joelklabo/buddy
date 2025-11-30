@@ -1,3 +1,4 @@
+// Package http provides an HTTP-based agent stub for external LLM APIs.
 package http
 
 import (

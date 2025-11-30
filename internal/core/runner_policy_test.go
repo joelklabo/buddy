@@ -14,7 +14,7 @@ type denyAction struct{ name string }
 
 func (d *denyAction) Name() string           { return d.name }
 func (d *denyAction) Capabilities() []string { return nil }
-func (d *denyAction) Invoke(ctx context.Context, args json.RawMessage) (json.RawMessage, error) {
+func (d *denyAction) Invoke(_ context.Context, args json.RawMessage) (json.RawMessage, error) {
 	return json.RawMessage(`"ok"`), nil
 }
 

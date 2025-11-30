@@ -1,3 +1,4 @@
+// Package commands parses the mini-DSL used in inbound messages.
 package commands
 
 import (

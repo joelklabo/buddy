@@ -86,10 +86,12 @@ func WithSessionTimeout(d time.Duration) RunnerOption {
 	return func(r *Runner) { r.sessionTimeout = d }
 }
 
+// WithInitialPrompt sets a preamble prompt that is prepended to the first user message.
 func WithInitialPrompt(p string) RunnerOption {
 	return func(r *Runner) { r.initialPrompt = p }
 }
 
+// WithMaxReplyChars limits reply text length.
 func WithMaxReplyChars(n int) RunnerOption {
 	return func(r *Runner) { r.maxReplyChars = n }
 }
@@ -180,66 +182,18 @@ func (r *Runner) handleMessage(parent context.Context, msg InboundMessage) {
 		slog.String("thread", msg.ThreadID),
 	)
 
-	if len(r.allowedSenders) > 0 {
-		if _, ok := r.allowedSenders[strings.ToLower(msg.Sender)]; !ok {
-			log.Warn("sender not allowed")
-			return
-		}
+	if !r.senderAllowed(log, msg.Sender) {
+		return
 	}
 
-	// Command mini-DSL handling
+	if r.handleCommand(parent, msg, log) {
+		return
+	}
+
 	cmd := commands.Parse(msg.Text)
-	switch cmd.Name {
-	case "help":
-		r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, helpText())
-		return
-	case "status":
-		if r.store != nil {
-			if st, ok, _ := r.store.Active(msg.Sender); ok {
-				r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, fmt.Sprintf("Active session: %s (updated %s)", st.SessionID, st.UpdatedAt.Format(time.RFC3339)))
-			} else {
-				r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, "No active session. Send a prompt to start one or /new to reset.")
-			}
-			return
-		}
-	case "use":
-		if r.store == nil {
-			break
-		}
-		if strings.TrimSpace(cmd.Args) == "" {
-			r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, "Usage: /use <session-id>")
-			return
-		}
-		if err := r.store.SaveActive(msg.Sender, cmd.Args); err != nil {
-			r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, fmt.Sprintf("Failed to set active session: %v", err))
-			return
-		}
-		r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, fmt.Sprintf("Switched to session %s", cmd.Args))
-		return
-	case "new":
-		if r.store != nil {
-			_ = r.store.ClearActive(msg.Sender)
-		}
-		r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, machineGreeting())
-		if cmd.Args == "" {
-			return
-		}
-	case "raw":
-		if strings.TrimSpace(cmd.Args) == "" {
-			r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, "Usage: /raw <shell command>")
-			return
-		}
-		if act, ok := r.actions["shell"]; ok {
-			payload := fmt.Sprintf(`{"command":%q}`, cmd.Args)
-			out, err := act.Invoke(parent, []byte(payload))
-			if err != nil {
-				r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, fmt.Sprintf("shell error: %v", err))
-			} else {
-				r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, string(out))
-			}
-		} else {
-			r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, "shell action not available")
-		}
+	prompt, sessionID := r.preparePrompt(cmd, msg.Sender)
+	if strings.TrimSpace(prompt) == "" {
+		r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, "No prompt detected. Send text or /help for commands.")
 		return
 	}
 
@@ -248,27 +202,6 @@ func (r *Runner) handleMessage(parent context.Context, msg InboundMessage) {
 		var cancel context.CancelFunc
 		reqCtx, cancel = context.WithTimeout(parent, r.reqTimeout)
 		defer cancel()
-	}
-
-	prompt := cmd.Args
-	if cmd.Name != "run" && cmd.Name != "new" && cmd.Name != "raw" {
-		prompt = cmd.Raw
-	}
-
-	var sessionID string
-	if r.store != nil {
-		if st, ok, _ := r.store.Active(msg.Sender); ok {
-			if r.sessionTimeout > 0 && time.Since(st.UpdatedAt) > r.sessionTimeout {
-				_ = r.store.ClearActive(msg.Sender)
-			} else {
-				sessionID = st.SessionID
-			}
-		}
-	}
-
-	if strings.TrimSpace(prompt) == "" {
-		r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, "No prompt detected. Send text or /help for commands.")
-		return
 	}
 
 	if sessionID == "" && strings.TrimSpace(r.initialPrompt) != "" {
@@ -422,4 +355,90 @@ func helpText() string {
 
 func machineGreeting() string {
 	return "Starting fresh session."
+}
+
+func (r *Runner) senderAllowed(log *slog.Logger, sender string) bool {
+	if len(r.allowedSenders) == 0 {
+		return true
+	}
+	if _, ok := r.allowedSenders[strings.ToLower(sender)]; ok {
+		return true
+	}
+	log.Warn("sender not allowed")
+	return false
+}
+
+func (r *Runner) handleCommand(ctx context.Context, msg InboundMessage, log *slog.Logger) bool {
+	cmd := commands.Parse(msg.Text)
+	switch cmd.Name {
+	case "help":
+		r.sendSimple(ctx, msg.Transport, msg.Sender, msg.ThreadID, helpText())
+		return true
+	case "status":
+		if r.store != nil {
+			if st, ok, _ := r.store.Active(msg.Sender); ok {
+				r.sendSimple(ctx, msg.Transport, msg.Sender, msg.ThreadID, fmt.Sprintf("Active session: %s (updated %s)", st.SessionID, st.UpdatedAt.Format(time.RFC3339)))
+			} else {
+				r.sendSimple(ctx, msg.Transport, msg.Sender, msg.ThreadID, "No active session. Send a prompt to start one or /new to reset.")
+			}
+			return true
+		}
+	case "use":
+		if r.store == nil {
+			return false
+		}
+		if strings.TrimSpace(cmd.Args) == "" {
+			r.sendSimple(ctx, msg.Transport, msg.Sender, msg.ThreadID, "Usage: /use <session-id>")
+			return true
+		}
+		if err := r.store.SaveActive(msg.Sender, cmd.Args); err != nil {
+			r.sendSimple(ctx, msg.Transport, msg.Sender, msg.ThreadID, fmt.Sprintf("Failed to set active session: %v", err))
+			return true
+		}
+		r.sendSimple(ctx, msg.Transport, msg.Sender, msg.ThreadID, fmt.Sprintf("Switched to session %s", cmd.Args))
+		return true
+	case "new":
+		if r.store != nil {
+			_ = r.store.ClearActive(msg.Sender)
+		}
+		r.sendSimple(ctx, msg.Transport, msg.Sender, msg.ThreadID, machineGreeting())
+		return cmd.Args == ""
+	case "raw":
+		if strings.TrimSpace(cmd.Args) == "" {
+			r.sendSimple(ctx, msg.Transport, msg.Sender, msg.ThreadID, "Usage: /raw <shell command>")
+			return true
+		}
+		if act, ok := r.actions["shell"]; ok {
+			payload := fmt.Sprintf(`{"command":%q}`, cmd.Args)
+			out, err := act.Invoke(ctx, []byte(payload))
+			if err != nil {
+				r.sendSimple(ctx, msg.Transport, msg.Sender, msg.ThreadID, fmt.Sprintf("shell error: %v", err))
+			} else {
+				r.sendSimple(ctx, msg.Transport, msg.Sender, msg.ThreadID, string(out))
+			}
+		} else {
+			r.sendSimple(ctx, msg.Transport, msg.Sender, msg.ThreadID, "shell action not available")
+		}
+		return true
+	}
+	return false
+}
+
+func (r *Runner) preparePrompt(cmd commands.Command, sender string) (string, string) {
+	prompt := cmd.Args
+	if cmd.Name != "run" && cmd.Name != "new" && cmd.Name != "raw" {
+		prompt = cmd.Raw
+	}
+
+	sessionID := ""
+	if r.store != nil {
+		if st, ok, _ := r.store.Active(sender); ok {
+			if r.sessionTimeout > 0 && time.Since(st.UpdatedAt) > r.sessionTimeout {
+				_ = r.store.ClearActive(sender)
+			} else {
+				sessionID = st.SessionID
+			}
+		}
+	}
+	return prompt, sessionID
 }

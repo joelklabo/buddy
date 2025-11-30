@@ -1,3 +1,4 @@
+// Package fs provides filesystem read/write actions with path safety checks.
 package fs
 
 import (

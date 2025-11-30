@@ -1,3 +1,4 @@
+// Package echo implements a trivial agent that echoes prompts.
 package echo
 
 import (

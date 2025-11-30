@@ -1,3 +1,4 @@
+// Package mock implements an in-memory transport for tests.
 package mock
 
 import (

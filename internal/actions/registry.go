@@ -1,3 +1,4 @@
+// Package action stores the registry of available action constructors.
 package action
 
 import (

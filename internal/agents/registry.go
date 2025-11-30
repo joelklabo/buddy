@@ -1,3 +1,4 @@
+// Package agent manages agent constructors and registration.
 package agent
 
 import (

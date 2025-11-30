@@ -1,3 +1,4 @@
+// Package slack is a placeholder Slack transport implementation.
 package slack
 
 import (

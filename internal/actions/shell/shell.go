@@ -1,3 +1,4 @@
+// Package shell exposes a shell execution action with allowlist and truncation.
 package shell
 
 import (

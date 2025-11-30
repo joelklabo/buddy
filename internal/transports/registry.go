@@ -1,3 +1,4 @@
+// Package transport holds the registry for transport plugins.
 package transport
 
 import (
