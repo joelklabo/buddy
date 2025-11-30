@@ -72,3 +72,12 @@ actions:
     allowed: []
     timeout_seconds: 120
     max_output: 8000
+  - type: "readfile"
+    name: "readfile"
+    roots:
+      - "."
+  - type: "writefile"
+    name: "writefile"
+    roots:
+      - "."
+    allow_write: false
