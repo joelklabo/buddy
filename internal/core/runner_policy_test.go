@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"encoding/json"
+	"sync"
 	"testing"
 	"time"
 )
@@ -17,11 +18,24 @@ func (d *denyAction) Invoke(ctx context.Context, args json.RawMessage) (json.Raw
 	return json.RawMessage(`"ok"`), nil
 }
 
-type auditRecorder struct{ entries []string }
+type auditRecorder struct {
+	mu      sync.Mutex
+	entries []string
+}
 
 func (a *auditRecorder) AppendAudit(action, sender, outcome string, dur time.Duration) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	a.entries = append(a.entries, action+":"+outcome)
 	return nil
+}
+
+func (a *auditRecorder) snapshot() []string {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	out := make([]string, len(a.entries))
+	copy(out, a.entries)
+	return out
 }
 
 func TestRunnerRespectsAllowedActions(t *testing.T) {
@@ -41,16 +55,17 @@ func TestRunnerRespectsAllowedActions(t *testing.T) {
 		close(done)
 	}()
 
-	waitForChannel(t, &tr.inbound)
-	tr.inbound <- InboundMessage{Transport: "mock", Sender: "alice", Text: "run", ThreadID: "t"}
+	inCh := waitForChannel(t, tr.inboundChan)
+	inCh <- InboundMessage{Transport: "mock", Sender: "alice", Text: "run", ThreadID: "t"}
 	time.Sleep(20 * time.Millisecond)
 	cancel()
 	<-done
 
-	if len(tr.sent) != 1 {
+	sent := tr.sentMessages()
+	if len(sent) != 1 {
 		t.Fatalf("expected 1 outbound")
 	}
-	if len(audit.entries) == 0 {
+	if len(audit.snapshot()) == 0 {
 		t.Fatalf("expected audit entry")
 	}
 }
@@ -70,13 +85,13 @@ func TestRunnerSenderAllowlist(t *testing.T) {
 		close(done)
 	}()
 
-	waitForChannel(t, &tr.inbound)
-	tr.inbound <- InboundMessage{Transport: "mock", Sender: "alice", Text: "run", ThreadID: "t"}
+	inCh := waitForChannel(t, tr.inboundChan)
+	inCh <- InboundMessage{Transport: "mock", Sender: "alice", Text: "run", ThreadID: "t"}
 	time.Sleep(10 * time.Millisecond)
 	cancel()
 	<-done
 
-	if len(tr.sent) != 0 {
+	if len(tr.sentMessages()) != 0 {
 		t.Fatalf("expected no outbound for disallowed sender")
 	}
 }

@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"sync"
 	"testing"
 	"time"
 )
 
 type mockTransport struct {
 	id      string
+	mu      sync.Mutex
 	inbound chan<- InboundMessage
 	sent    []OutboundMessage
 }
@@ -17,14 +19,40 @@ type mockTransport struct {
 func (m *mockTransport) ID() string { return m.id }
 
 func (m *mockTransport) Start(ctx context.Context, in chan<- InboundMessage) error {
-	m.inbound = in
+	m.setInbound(in)
 	<-ctx.Done()
 	return ctx.Err()
 }
 
 func (m *mockTransport) Send(_ context.Context, msg OutboundMessage) error {
-	m.sent = append(m.sent, msg)
+	m.appendSent(msg)
 	return nil
+}
+
+func (m *mockTransport) setInbound(ch chan<- InboundMessage) {
+	m.mu.Lock()
+	m.inbound = ch
+	m.mu.Unlock()
+}
+
+func (m *mockTransport) inboundChan() chan<- InboundMessage {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.inbound
+}
+
+func (m *mockTransport) appendSent(msg OutboundMessage) {
+	m.mu.Lock()
+	m.sent = append(m.sent, msg)
+	m.mu.Unlock()
+}
+
+func (m *mockTransport) sentMessages() []OutboundMessage {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := make([]OutboundMessage, len(m.sent))
+	copy(out, m.sent)
+	return out
 }
 
 type mockAgent struct {
@@ -67,22 +95,23 @@ func TestRunnerEndToEnd(t *testing.T) {
 		close(done)
 	}()
 
-	waitForChannel(t, &tr.inbound)
+	inCh := waitForChannel(t, tr.inboundChan)
 	inbound := InboundMessage{Transport: "mock", Sender: "alice", Text: "hello", ThreadID: "t1"}
-	tr.inbound <- inbound
+	inCh <- inbound
 
 	// allow processing
 	time.Sleep(50 * time.Millisecond)
 	cancel()
 	<-done
 
-	if len(tr.sent) != 1 {
-		t.Fatalf("expected 1 outbound, got %d", len(tr.sent))
+	sent := tr.sentMessages()
+	if len(sent) != 1 {
+		t.Fatalf("expected 1 outbound, got %d", len(sent))
 	}
-	if tr.sent[0].Recipient != "alice" {
-		t.Fatalf("recipient mismatch: %s", tr.sent[0].Recipient)
+	if sent[0].Recipient != "alice" {
+		t.Fatalf("recipient mismatch: %s", sent[0].Recipient)
 	}
-	if tr.sent[0].Text == "" {
+	if sent[0].Text == "" {
 		t.Fatalf("empty outbound text")
 	}
 }
@@ -103,28 +132,30 @@ func TestRunnerExecutesActionResults(t *testing.T) {
 		close(done)
 	}()
 
-	waitForChannel(t, &tr.inbound)
-	tr.inbound <- InboundMessage{Transport: "mock", Sender: "bob", Text: "run", ThreadID: "th"}
+	inCh := waitForChannel(t, tr.inboundChan)
+	inCh <- InboundMessage{Transport: "mock", Sender: "bob", Text: "run", ThreadID: "th"}
 	time.Sleep(50 * time.Millisecond)
 	cancel()
 	<-done
 
-	if len(tr.sent) != 1 {
-		t.Fatalf("expected 1 outbound, got %d", len(tr.sent))
+	sent := tr.sentMessages()
+	if len(sent) != 1 {
+		t.Fatalf("expected 1 outbound, got %d", len(sent))
 	}
-	if got := tr.sent[0].Text; got == "base" {
+	if got := sent[0].Text; got == "base" {
 		t.Fatalf("expected action result appended, got %q", got)
 	}
 }
 
-func waitForChannel(t *testing.T, ch *chan<- InboundMessage) {
+func waitForChannel(t *testing.T, chFn func() chan<- InboundMessage) chan<- InboundMessage {
 	t.Helper()
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
-		if *ch != nil {
-			return
+		if ch := chFn(); ch != nil {
+			return ch
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
 	t.Fatal("transport inbound channel not set")
+	return nil
 }
