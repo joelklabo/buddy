@@ -8,6 +8,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"nostr-codex-runner/internal/commands"
+	"nostr-codex-runner/internal/store"
 )
 
 // Runner wires transports, agent, and actions together.
@@ -26,6 +29,11 @@ type Runner struct {
 	allowedSenders map[string]struct{}
 
 	auditStore AuditLogger
+
+	store          store.StoreAPI
+	sessionTimeout time.Duration
+	initialPrompt  string
+	maxReplyChars  int
 }
 
 // AuditLogger records action executions.
@@ -67,6 +75,23 @@ func WithAllowedSenders(ids []string) RunnerOption {
 // WithAuditLogger wires an audit sink.
 func WithAuditLogger(a AuditLogger) RunnerOption {
 	return func(r *Runner) { r.auditStore = a }
+}
+
+// WithStore provides a store for session/cursor management.
+func WithStore(st store.StoreAPI) RunnerOption {
+	return func(r *Runner) { r.store = st }
+}
+
+func WithSessionTimeout(d time.Duration) RunnerOption {
+	return func(r *Runner) { r.sessionTimeout = d }
+}
+
+func WithInitialPrompt(p string) RunnerOption {
+	return func(r *Runner) { r.initialPrompt = p }
+}
+
+func WithMaxReplyChars(n int) RunnerOption {
+	return func(r *Runner) { r.maxReplyChars = n }
 }
 
 // NewRunner constructs a Runner. If logger is nil, slog.Default is used.
@@ -162,6 +187,62 @@ func (r *Runner) handleMessage(parent context.Context, msg InboundMessage) {
 		}
 	}
 
+	// Command mini-DSL handling
+	cmd := commands.Parse(msg.Text)
+	switch cmd.Name {
+	case "help":
+		r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, helpText())
+		return
+	case "status":
+		if r.store != nil {
+			if st, ok, _ := r.store.Active(msg.Sender); ok {
+				r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, fmt.Sprintf("Active session: %s (updated %s)", st.SessionID, st.UpdatedAt.Format(time.RFC3339)))
+			} else {
+				r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, "No active session. Send a prompt to start one or /new to reset.")
+			}
+			return
+		}
+	case "use":
+		if r.store == nil {
+			break
+		}
+		if strings.TrimSpace(cmd.Args) == "" {
+			r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, "Usage: /use <session-id>")
+			return
+		}
+		if err := r.store.SaveActive(msg.Sender, cmd.Args); err != nil {
+			r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, fmt.Sprintf("Failed to set active session: %v", err))
+			return
+		}
+		r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, fmt.Sprintf("Switched to session %s", cmd.Args))
+		return
+	case "new":
+		if r.store != nil {
+			_ = r.store.ClearActive(msg.Sender)
+		}
+		r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, machineGreeting())
+		if cmd.Args == "" {
+			return
+		}
+	case "raw":
+		if strings.TrimSpace(cmd.Args) == "" {
+			r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, "Usage: /raw <shell command>")
+			return
+		}
+		if act, ok := r.actions["shell"]; ok {
+			payload := fmt.Sprintf(`{"command":%q}`, cmd.Args)
+			out, err := act.Invoke(parent, []byte(payload))
+			if err != nil {
+				r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, fmt.Sprintf("shell error: %v", err))
+			} else {
+				r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, string(out))
+			}
+		} else {
+			r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, "shell action not available")
+		}
+		return
+	}
+
 	reqCtx := parent
 	if r.reqTimeout > 0 {
 		var cancel context.CancelFunc
@@ -169,8 +250,33 @@ func (r *Runner) handleMessage(parent context.Context, msg InboundMessage) {
 		defer cancel()
 	}
 
+	prompt := cmd.Args
+	if cmd.Name != "run" && cmd.Name != "new" && cmd.Name != "raw" {
+		prompt = cmd.Raw
+	}
+
+	var sessionID string
+	if r.store != nil {
+		if st, ok, _ := r.store.Active(msg.Sender); ok {
+			if r.sessionTimeout > 0 && time.Since(st.UpdatedAt) > r.sessionTimeout {
+				_ = r.store.ClearActive(msg.Sender)
+			} else {
+				sessionID = st.SessionID
+			}
+		}
+	}
+
+	if strings.TrimSpace(prompt) == "" {
+		r.sendSimple(parent, msg.Transport, msg.Sender, msg.ThreadID, "No prompt detected. Send text or /help for commands.")
+		return
+	}
+
+	if sessionID == "" && strings.TrimSpace(r.initialPrompt) != "" {
+		prompt = r.initialPrompt + "\n\n" + prompt
+	}
+
 	req := AgentRequest{
-		Prompt:     msg.Text,
+		Prompt:     prompt,
 		History:    nil,
 		Actions:    r.actionSpecs,
 		SenderMeta: msg.Meta,
@@ -294,4 +400,26 @@ func (r *Runner) logAudit(action, sender, outcome string, dur time.Duration) {
 		return
 	}
 	_ = r.auditStore.AppendAudit(action, sender, outcome, dur)
+}
+
+func (r *Runner) sendSimple(ctx context.Context, transportID, recipient, threadID, text string) {
+	msg := OutboundMessage{
+		Transport: transportID,
+		Recipient: recipient,
+		ThreadID:  threadID,
+		Text:      text,
+	}
+	tr, ok := r.transportMap[transportID]
+	if !ok {
+		return
+	}
+	_ = tr.Send(ctx, msg)
+}
+
+func helpText() string {
+	return "Commands: /help, /status, /new [prompt], /use <session-id>, /raw <cmd>. Anything else runs as prompt."
+}
+
+func machineGreeting() string {
+	return "Starting fresh session."
 }

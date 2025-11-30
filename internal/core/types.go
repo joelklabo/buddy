@@ -57,6 +57,7 @@ type AgentRequest struct {
 // AgentResponse is produced by the agent.
 type AgentResponse struct {
 	Reply       string       `json:"reply"`
+	SessionID   string       `json:"session_id,omitempty"`
 	ActionCalls []ActionCall `json:"action_calls,omitempty"`
 }
 

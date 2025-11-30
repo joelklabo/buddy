@@ -29,5 +29,5 @@ func (a *Agent) Generate(ctx context.Context, req core.AgentRequest) (core.Agent
 	if err != nil {
 		return core.AgentResponse{}, err
 	}
-	return core.AgentResponse{Reply: res.Reply}, nil
+	return core.AgentResponse{Reply: res.Reply, SessionID: res.SessionID}, nil
 }
