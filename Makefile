@@ -20,3 +20,11 @@ fmt:
 
 install:
 	go install ./cmd/runner
+
+verify:
+	@gofmt -l cmd internal | tee /tmp/gofmt.out
+	@test ! -s /tmp/gofmt.out || (echo "gofmt needed" && cat /tmp/gofmt.out && false)
+	go vet ./...
+	@command -v staticcheck >/dev/null 2>&1 || go install honnef.co/go/tools/cmd/staticcheck@latest
+	staticcheck ./...
+	go test -race -covermode=atomic ./...

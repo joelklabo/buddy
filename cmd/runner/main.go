@@ -18,6 +18,7 @@ import (
 
 	"nostr-codex-runner/internal/app"
 	"nostr-codex-runner/internal/config"
+	"nostr-codex-runner/internal/health"
 	"nostr-codex-runner/internal/store"
 )
 
@@ -27,6 +28,7 @@ var (
 	hostName     = "unknown"
 	runnerPID    = os.Getpid()
 	versionFlag  = flag.Bool("version", false, "Print version and exit")
+	healthListen = flag.String("health-listen", "", "Optional health endpoint listen addr (e.g., 127.0.0.1:8081)")
 )
 
 func main() {
@@ -37,6 +39,9 @@ func main() {
 		fmt.Printf("%s\n", buildVersion())
 		return
 	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	cfg, err := config.Load(*configPath)
 	if err != nil {
@@ -62,12 +67,15 @@ func main() {
 		}
 	}()
 
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-
 	runner, err := app.Build(cfg, st, logger)
 	if err != nil {
 		fatalf("build runner: %v", err)
+	}
+
+	if *healthListen != "" {
+		if _, err := health.Start(ctx, *healthListen, buildVer, logger); err != nil {
+			fatalf("start health: %v", err)
+		}
 	}
 
 	logger.Info("nostr-codex-runner starting")
@@ -98,7 +106,12 @@ func setupLogger(cfg *config.Config) *slog.Logger {
 		}
 		writers = append(writers, f)
 	}
-	logger := slog.New(slog.NewTextHandler(io.MultiWriter(writers...), &slog.HandlerOptions{Level: level}))
+	handlerOpts := &slog.HandlerOptions{Level: level}
+	var handler slog.Handler = slog.NewTextHandler(io.MultiWriter(writers...), handlerOpts)
+	if strings.ToLower(cfg.Logging.Format) == "json" {
+		handler = slog.NewJSONHandler(io.MultiWriter(writers...), handlerOpts)
+	}
+	logger := slog.New(handler)
 	return logger
 }
 
