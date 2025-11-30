@@ -10,16 +10,15 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"runtime"
-	"runtime/debug"
 	"strings"
 	"syscall"
-	"time"
 
 	"nostr-codex-runner/internal/app"
 	"nostr-codex-runner/internal/config"
 	"nostr-codex-runner/internal/health"
 	"nostr-codex-runner/internal/store"
+	"runtime"
+	"runtime/debug"
 )
 
 var (
