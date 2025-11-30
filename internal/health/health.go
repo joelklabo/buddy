@@ -30,7 +30,10 @@ func Start(ctx context.Context, addr, version string, logger *slog.Logger) (stri
 		})
 	})
 
-	srv := &http.Server{Handler: mux}
+	srv := &http.Server{
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
 
 	go func() {
 		<-ctx.Done()

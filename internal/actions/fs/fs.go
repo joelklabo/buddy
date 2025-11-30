@@ -100,7 +100,7 @@ func (w *WriteFile) Invoke(ctx context.Context, args json.RawMessage) (json.RawM
 	if int64(len(payload.Content)) > w.cfg.MaxBytes {
 		return nil, fmt.Errorf("content too large")
 	}
-	if err := os.WriteFile(p, []byte(payload.Content), 0o644); err != nil {
+	if err := os.WriteFile(p, []byte(payload.Content), 0o600); err != nil {
 		return nil, err
 	}
 	return json.RawMessage(`"ok"`), nil

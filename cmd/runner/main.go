@@ -95,7 +95,7 @@ func setupLogger(cfg *config.Config) *slog.Logger {
 	}
 	writers := []io.Writer{os.Stdout}
 	if cfg.Logging.File != "" {
-		if err := os.MkdirAll(filepath.Dir(cfg.Logging.File), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(cfg.Logging.File), 0o750); err != nil {
 			fatalf("create log dir: %v", err)
 		}
 		f, err := os.OpenFile(cfg.Logging.File, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
