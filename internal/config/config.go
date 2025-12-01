@@ -72,8 +72,9 @@ type Project struct {
 
 // TransportConfig is a generic transport entry.
 type TransportConfig struct {
-	Type string `yaml:"type"`
-	ID   string `yaml:"id"`
+	Type   string                 `yaml:"type"`
+	ID     string                 `yaml:"id"`
+	Config map[string]any         `yaml:"config"` // generic, transport-specific fields
 
 	// Nostr-specific fields (used when type=nostr)
 	Relays         []string `yaml:"relays"`
@@ -253,6 +254,7 @@ func (c *Config) applyDefaults(baseDir string) {
 			Relays:         c.Relays,
 			PrivateKey:     c.Runner.PrivateKey,
 			AllowedPubkeys: c.Runner.AllowedPubkeys,
+			Config:         map[string]any{},
 		}}
 	}
 	if c.Agent.Type == "" {

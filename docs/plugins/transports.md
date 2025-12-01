@@ -7,6 +7,7 @@ Built-ins:
 | `nostr` | `internal/transports/nostr`              | `relays`, `private_key`, `allowed_pubkeys`  |
 | `mock`  | `internal/transports/mock`               | For tests; echoes messages in-process.      |
 | `slack` | `internal/transports/slack` (stub)       | Scaffold only; fill in token/app config.    |
+| `whatsapp` | `internal/transports/whatsapp`        | Cloud API: `phone_number_id`, `access_token`, `verify_token`, `listen`, `allowed_numbers[]`, optional `base_url`. |
 
 To add a transport:
 1) Create `internal/transports/<name>/` with a type implementing `core.Transport`.

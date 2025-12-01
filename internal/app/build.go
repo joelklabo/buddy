@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"nostr-codex-runner/internal/store"
 	tmock "nostr-codex-runner/internal/transports/mock"
 	tnostr "nostr-codex-runner/internal/transports/nostr"
+	twa "nostr-codex-runner/internal/transports/whatsapp"
 )
 
 // Build constructs transports, agent, and actions from config.
@@ -31,6 +33,20 @@ func Build(cfg *config.Config, st *store.Store, logger *slog.Logger) (*core.Runn
 			transports = append(transports, nt)
 		case "mock":
 			transports = append(transports, tmock.New(t.ID))
+		case "whatsapp":
+			var wcfg twa.Config
+			if err := decodeMap(t.Config, &wcfg); err != nil {
+				return nil, fmt.Errorf("decode whatsapp config: %w", err)
+			}
+			// fallback to ID if provided at top-level
+			if wcfg.ID == "" {
+				wcfg.ID = t.ID
+			}
+			wt, err := twa.New(wcfg, logger)
+			if err != nil {
+				return nil, err
+			}
+			transports = append(transports, wt)
 		default:
 			return nil, fmt.Errorf("unknown transport type %s", t.Type)
 		}
@@ -84,4 +100,16 @@ func Build(cfg *config.Config, st *store.Store, logger *slog.Logger) (*core.Runn
 		core.WithMaxReplyChars(cfg.Runner.MaxReplyChars),
 	)
 	return r, nil
+}
+
+// decodeMap marshals a generic map into a typed struct via JSON.
+func decodeMap(m map[string]any, out any) error {
+	if len(m) == 0 {
+		return nil
+	}
+	b, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, out)
 }

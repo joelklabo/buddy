@@ -51,6 +51,15 @@ transports:
     private_key: ""          # hex
     allowed_pubkeys:
       - ""
+  # - type: "whatsapp"
+  #   id: "whatsapp"
+  #   config:
+  #     phone_number_id: "YOUR_PHONE_NUMBER_ID"
+  #     access_token: "YOUR_ACCESS_TOKEN"
+  #     verify_token: "your-verify-token"   # used by Meta webhook handshake
+  #     listen: ":8082"                     # webhook listener
+  #     allowed_numbers:
+  #       - "15555550100"
 
 agent:
   type: "codexcli"
