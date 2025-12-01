@@ -3,6 +3,9 @@
 CONFIG ?= config.yaml
 BIN ?= bin/nostr-codex-runner
 
+init-config:
+	@test -f $(CONFIG) && echo "$(CONFIG) already exists" || (cp config.example.yaml $(CONFIG) && echo "Wrote $(CONFIG). Edit secrets before running.")
+
 run:
 	CONFIG=$(CONFIG) go run ./cmd/runner
 

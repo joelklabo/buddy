@@ -84,9 +84,10 @@ These are all composable—pick any transport + one agent + any actions in `conf
 - `make test` – run unit tests.
 - `make lint` – `go vet ./...` (extra linters run in CI).
 - `make fmt` – `gofmt -w cmd internal`.
+- `make init-config` – copy `config.example.yaml` → `config.yaml` if missing.
 - `make install` – `go install ./cmd/runner`.
 
-## Install
+## Install / Quickstart
 
 - From source: `go install github.com/joelklabo/nostr-codex-runner/cmd/runner@latest`
 - From release binaries (macOS/Linux amd64/arm64): grab the asset from the GitHub Releases page, `chmod +x nostr-codex-runner-*`, and run `./nostr-codex-runner run -config config.yaml`.
@@ -98,6 +99,12 @@ These are all composable—pick any transport + one agent + any actions in `conf
   ```
 
   Customize with env vars: `INSTALL_DIR`, `CONFIG_DIR`, `VERSION` (tag or `latest`).
+
+- Fast local start:
+  1) `make init-config` (creates `config.yaml` if absent)  
+  2) Edit `config.yaml` to set your keys (runner.private_key, allowed_pubkeys, transport creds)  
+  3) `make run` (or `nostr-codex-runner run`)  
+  Use `sample-flows/` configs as starting points.
 
 - Prerequisites depend on the agent you choose:
   - Codex CLI: binary on `PATH`; optional full-access flags (`sandbox: danger-full-access`, `approval: never`, `extra_args: ["--dangerously-bypass-approvals-and-sandbox"]`) — only on trusted machines.
