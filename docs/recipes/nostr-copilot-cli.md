@@ -6,8 +6,11 @@ This walks through running the pluggable runner with:
 - **Actions**: shell, readfile, and writefile.
 
 ## Prerequisites
-- GitHub CLI (`gh`) installed and authenticated.
-- Copilot CLI enabled: `gh extension install github/gh-copilot && gh copilot setup`.
+- GitHub Copilot CLI installed (https://github.com/github/copilot-cli). Example:
+  ```bash
+  npm install -g @github/copilot
+  copilot auth login
+  ```
 - Nostr private key (hex) for the runner and at least one allowed operator pubkey.
 - Go 1.22+ (for building) or a release binary.
 
@@ -23,7 +26,8 @@ Fill the placeholders:
 
 Key knobs:
 - `agent.type: copilotcli` – switches to Copilot agent.
-- `agent.codex.binary` – path to `gh` if not on PATH.
+- `agent.codex.binary` – path to `copilot` if not on PATH.
+- `agent.codex.extra_args` – e.g., `["--allow-all-tools"]` to let Copilot apply edits/execute without interactive approval.
 - `actions` – enable/disable shell and fs actions or tighten allowlists.
 - `runner.initial_prompt` – a guardrail shown to Copilot on new sessions.
 

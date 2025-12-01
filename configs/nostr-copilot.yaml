@@ -12,9 +12,11 @@ transports:
 agent:
   type: copilotcli
   codex:
-    binary: gh                # requires gh with Copilot CLI enabled
+    binary: copilot           # requires https://github.com/github/copilot-cli
     working_dir: .
     timeout_seconds: 120
+    extra_args:
+      - --allow-all-tools     # optional: let Copilot apply edits/exec without prompting
 
 actions:
   - type: shell

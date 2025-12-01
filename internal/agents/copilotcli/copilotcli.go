@@ -1,6 +1,6 @@
 package copilotcli
 
-// Package copilotcli adapts GitHub Copilot CLI (`gh copilot suggest`) to the Agent interface.
+// Package copilotcli adapts the GitHub Copilot CLI (https://github.com/github/copilot-cli) to the Agent interface.
 
 import (
 	"bytes"
@@ -18,9 +18,11 @@ type Config struct {
 	Binary         string
 	WorkingDir     string
 	TimeoutSeconds int
+	AllowAllTools  bool
+	ExtraArgs      []string
 }
 
-// Agent shells out to `gh copilot suggest -p "<prompt>"`.
+// Agent shells out to `copilot -p "<prompt>"`.
 type Agent struct {
 	cfg Config
 }
@@ -28,7 +30,7 @@ type Agent struct {
 // New constructs a Copilot CLI agent with sane defaults.
 func New(cfg Config) *Agent {
 	if cfg.Binary == "" {
-		cfg.Binary = "gh"
+		cfg.Binary = "copilot"
 	}
 	if cfg.TimeoutSeconds == 0 {
 		cfg.TimeoutSeconds = 120
@@ -41,7 +43,14 @@ func (a *Agent) Generate(ctx context.Context, req core.AgentRequest) (core.Agent
 	cctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	args := []string{"copilot", "suggest", "-p", strings.TrimSpace(req.Prompt)}
+	args := []string{"-p", strings.TrimSpace(req.Prompt)}
+	if a.cfg.AllowAllTools {
+		args = append(args, "--allow-all-tools")
+	}
+	if len(a.cfg.ExtraArgs) > 0 {
+		args = append(args, a.cfg.ExtraArgs...)
+	}
+
 	cmd := exec.CommandContext(cctx, a.cfg.Binary, args...)
 	if a.cfg.WorkingDir != "" {
 		cmd.Dir = a.cfg.WorkingDir

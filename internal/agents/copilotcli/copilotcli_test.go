@@ -9,10 +9,10 @@ import (
 	"nostr-codex-runner/internal/core"
 )
 
-// create a fake gh binary that returns static text.
-func writeFakeGh(t *testing.T, dir string) string {
+// create a fake copilot binary that returns static text.
+func writeFakeCopilot(t *testing.T, dir string) string {
 	t.Helper()
-	path := filepath.Join(dir, "gh")
+	path := filepath.Join(dir, "copilot")
 	script := "#!/usr/bin/env bash\necho \"hi from copilot\"\n"
 	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
 		t.Fatalf("write fake gh: %v", err)
@@ -22,9 +22,9 @@ func writeFakeGh(t *testing.T, dir string) string {
 
 func TestCopilotAgentGenerates(t *testing.T) {
 	td := t.TempDir()
-	gh := writeFakeGh(t, td)
+	bin := writeFakeCopilot(t, td)
 
-	ag := New(Config{Binary: gh})
+	ag := New(Config{Binary: bin})
 	resp, err := ag.Generate(context.Background(), core.AgentRequest{Prompt: "hello"})
 	if err != nil {
 		t.Fatalf("generate: %v", err)

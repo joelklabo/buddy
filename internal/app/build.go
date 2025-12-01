@@ -49,6 +49,8 @@ func Build(cfg *config.Config, st *store.Store, logger *slog.Logger) (*core.Runn
 			Binary:         cfg.Agent.Codex.Binary,
 			WorkingDir:     cfg.Agent.Codex.WorkingDir,
 			TimeoutSeconds: cfg.Agent.Codex.TimeoutSeconds,
+			AllowAllTools:  false,
+			ExtraArgs:      cfg.Agent.Codex.ExtraArgs,
 		})
 	default:
 		return nil, fmt.Errorf("unknown agent type %s", cfg.Agent.Type)

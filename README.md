@@ -11,7 +11,7 @@
 Always-on bridge that listens for messages, feeds them into an AI agent, and executes optional host actions. Architecture is fully pluggable:
 - **Transport**: how messages arrive/leave (built-ins: Nostr DM, mock; Slack stub scaffold).
 - **Agent**: the model backend (built-ins: Codex CLI, echo, HTTP stub for OpenAI/Claude-style).
-- **Copilot agent**: use GitHub Copilot CLI by setting `agent.type: copilotcli` (requires `gh` + Copilot CLI installed).
+- **Copilot agent**: use GitHub Copilot CLI by setting `agent.type: copilotcli` (requires `copilot` from https://github.com/github/copilot-cli).
 - **Action**: host capabilities (built-ins: shell exec, fs read/write; extend with your own).
 The original Nostr Codex Runner is now just one config of this framework.
 
@@ -145,9 +145,10 @@ transports:
 agent:
   type: copilotcli
   codex:                # reused fields: set binary/working_dir/timeout
-    binary: gh          # must have GitHub Copilot CLI enabled: gh extension install github/gh-copilot
+    binary: copilot     # install via: npm install -g @github/copilot
     working_dir: .
     timeout_seconds: 120
+    extra_args: ["--allow-all-tools"]  # optional; lets Copilot apply edits/execute without prompts
 actions:
   - type: shell
     name: shell
