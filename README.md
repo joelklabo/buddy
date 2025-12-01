@@ -123,6 +123,7 @@ The runner only needs outbound internet for its transport (e.g., Nostr relays). 
 - `transports[]`: list of transports. Example (Nostr): see config.example.yaml; legacy relays still default to nostr.
 - `runner.allowed_pubkeys`: access control.
 - `runner.session_timeout_minutes`: idle cutoff before discarding a session mapping.
+- `runner.initial_prompt`: prepended once on a new session to set agent persona/guardrails.
 - `agent.config.*`: CLI-style knobs for the selected agent (binary, working dir, extra args, timeout). `agent.codex` remains as a backward-compatible alias.
 - `actions[]`: host capabilities; declare the ones you want (e.g., `shell`, `readfile`, `writefile`).
 - `storage.path`: BoltDB file for state.
@@ -270,5 +271,3 @@ See `CONTRIBUTING.md` for how to propose changes, run checks, and follow the `bd
 ## License
 
 MIT — see `LICENSE`.
-
-- Initial prompt: `runner.initial_prompt` (prepended once for new sessions). Set it to remind the agent of its purpose.
