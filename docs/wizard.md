@@ -4,7 +4,7 @@ Quickest way to produce a working config without editing YAML.
 
 ## Usage
 ```bash
-nostr-codex-runner wizard [config-path]
+buddy wizard [config-path]
 ```
 - If no path is given, writes `~/.config/buddy/config.yaml` (creates parent dirs).
 - If the file exists, prompts before overwrite.
@@ -28,7 +28,7 @@ nostr-codex-runner wizard [config-path]
 - Output shows the config path.
 - Start the runner:
   ```bash
-  nostr-codex-runner run -config ~/.config/buddy/config.yaml
+  buddy run -config ~/.config/buddy/config.yaml
   ```
 
 ## Notes

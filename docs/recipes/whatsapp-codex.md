@@ -58,7 +58,7 @@ logging:
 ```
 
 ## Wire up Twilio webhook
-1. Run the runner: `make run` (or `./bin/nostr-codex-runner -config config.yaml`).
+1. Run the runner: `make run` (or `./bin/buddy -config config.yaml`).
 2. Expose port `8083` publicly (e.g., `ngrok http 8083`).
 3. In Twilio Console, set the WhatsApp sandbox/number webhook URL to `https://<public-host>/twilio/webhook`.
 4. Send a WhatsApp message to your Twilio number from an allowed phone; the runner should reply via the agent.

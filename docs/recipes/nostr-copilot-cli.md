@@ -35,7 +35,7 @@ Key knobs:
 ```bash
 make run                          # uses ./config.yaml
 # or point at a custom file
-./bin/nostr-codex-runner -config /path/to/config.yaml
+./bin/buddy -config /path/to/config.yaml
 ```
 
 ## Use it

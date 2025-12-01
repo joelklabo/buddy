@@ -1,0 +1,14 @@
+[Unit]
+Description=buddy runner
+After=network.target
+
+[Service]
+Type=simple
+User=%i
+Environment=BUDDY_CONFIG=%h/.config/buddy/config.yaml
+ExecStart=%h/.local/bin/buddy run -config ${BUDDY_CONFIG}
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

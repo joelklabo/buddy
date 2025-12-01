@@ -9,10 +9,10 @@ Prereqs
 - Access to test Nostr relays (for integration flows)
 
 Setup steps
-1) Clone (until repo rename completes):
+1) Clone:
    ```bash
-   git clone https://github.com/joelklabo/nostr-codex-runner.git
-   cd nostr-codex-runner
+   git clone https://github.com/joelklabo/buddy.git
+   cd buddy
    ```
 2) Deps:
    ```bash
@@ -20,7 +20,7 @@ Setup steps
    ```
 3) Build & run:
    ```bash
-   make build      # bin/nostr-codex-runner (to be buddy post-rename)
+   make build      # bin/buddy (+ nostr-buddy symlink)
    make run        # uses config.yaml
    ```
 4) Formatting & lint:
@@ -50,5 +50,5 @@ bd workflow
 - Commit message should close the issue, e.g., `Some change (closes nostr-codex-runner-3oa.X)`.
 
 After rename
-- Module path becomes `github.com/joelklabo/buddy`; adjust imports and go.mod accordingly.
-- Binaries become `buddy` (plus `nostr-buddy` alias).
+- Module path is `github.com/joelklabo/buddy`.
+- Binaries: `buddy` (+ `nostr-buddy` alias).
