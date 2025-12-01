@@ -33,5 +33,7 @@ func TestStartAndExpose(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get metrics: %v", err)
 	}
-	resp.Body.Close()
+	if cerr := resp.Body.Close(); cerr != nil {
+		t.Fatalf("close body: %v", cerr)
+	}
 }
