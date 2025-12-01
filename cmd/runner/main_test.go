@@ -23,3 +23,7 @@ func TestDefaultConfigPathEnv(t *testing.T) {
 		t.Fatalf("expected env path, got %s", got)
 	}
 }
+
+func TestUsageDoesNotPanic(t *testing.T) {
+	usage()
+}
