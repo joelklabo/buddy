@@ -45,9 +45,7 @@ brews:
     homepage: "https://github.com/joelklabo/buddy"
     folder: Formula
     install: |
-      bin.install "buddy"
-      bin.install_symlink "buddy" => "nostr-buddy"
-      man1.install "docs/man/buddy.1"
+      bin.install "buddy"      man1.install "docs/man/buddy.1"
     test: |
       system "#{bin}/buddy", "version"
 

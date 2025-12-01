@@ -14,10 +14,8 @@ import (
 
 // Config holds the runtime configuration loaded from config.yaml.
 type Config struct {
-	Relays []string     `yaml:"relays"`
-	Runner RunnerConfig `yaml:"runner"`
-	// Codex is kept for backward compatibility with legacy single-agent configs.
-	Codex    CodexConfig   `yaml:"codex"`
+	Relays   []string      `yaml:"relays"`
+	Runner   RunnerConfig  `yaml:"runner"`
 	Storage  StorageConfig `yaml:"storage"`
 	Logging  LoggingConfig `yaml:"logging"`
 	Projects []Project     `yaml:"projects"`
@@ -84,11 +82,9 @@ type TransportConfig struct {
 }
 
 // AgentConfig holds agent selection and backend config.
-// The `config` field is generic; `codex` is kept as a legacy alias.
 type AgentConfig struct {
 	Type   string      `yaml:"type"`
 	Config CodexConfig `yaml:"config"` // generic CLI-like config
-	Codex  CodexConfig `yaml:"codex"`  // legacy alias for backward compatibility
 }
 
 // ActionConfig defines an action plugin instance.
@@ -190,21 +186,7 @@ func (c *Config) applyDefaults(baseDir string) {
 	if c.Runner.ProfileImage == "" {
 		c.Runner.ProfileImage = "https://raw.githubusercontent.com/joelklabo/buddy/main/assets/social-preview.svg"
 	}
-	// Normalize agent config (prefers agent.config, falls back to agent.codex, then root codex)
-	agentCfg := c.Agent.Config
-	if agentCfg.isZero() && !c.Agent.Codex.isZero() {
-		agentCfg = c.Agent.Codex
-	}
-	if agentCfg.isZero() && !c.Codex.isZero() {
-		agentCfg = c.Codex
-	}
-	applyCLIConfigDefaults(&agentCfg)
-	c.Agent.Config = agentCfg
-	// Keep legacy codex field filled for any older code paths.
-	c.Codex = agentCfg
-	if c.Codex.TimeoutSeconds == 0 {
-		c.Codex.TimeoutSeconds = 900 // 15 minutes
-	}
+	applyCLIConfigDefaults(&c.Agent.Config)
 	if c.Logging.Level == "" {
 		c.Logging.Level = "info"
 	}
@@ -213,7 +195,7 @@ func (c *Config) applyDefaults(baseDir string) {
 	}
 	if c.Logging.File == "" {
 		if home, err := os.UserHomeDir(); err == nil {
-			c.Logging.File = filepath.Join(home, ".nostr-codex", "runner.log")
+			c.Logging.File = filepath.Join(home, ".buddy", "runner.log")
 		}
 	}
 

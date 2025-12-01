@@ -31,10 +31,7 @@ var (
 	runnerPID = os.Getpid()
 )
 
-const (
-	envConfigNew    = "BUDDY_CONFIG"
-	envConfigLegacy = "NCR_CONFIG"
-)
+const envConfigNew = "BUDDY_CONFIG"
 
 func main() {
 	subcmd, args := parseSubcommand(os.Args[1:])
@@ -211,7 +208,7 @@ func defaultConfigPath() string {
 	if v := os.Getenv(envConfigNew); v != "" {
 		return v
 	}
-	if v := os.Getenv(envConfigLegacy); v != "" {
+	if v := os.Getenv(envConfigNew); v != "" {
 		return v
 	}
 	// cwd config wins if present
@@ -223,10 +220,6 @@ func defaultConfigPath() string {
 		newPath := filepath.Join(home, ".config", "buddy", "config.yaml")
 		if fileExists(newPath) {
 			return newPath
-		}
-		legacyPath := filepath.Join(home, ".config", "nostr-codex-runner", "config.yaml")
-		if fileExists(legacyPath) {
-			return legacyPath
 		}
 		return newPath
 	}
@@ -242,7 +235,7 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "  presets [name]            list built-in presets or show one\n")
 	fmt.Fprintf(os.Stderr, "  version                   show version\n")
 	fmt.Fprintf(os.Stderr, "  help [command]            show help\n\n")
-	fmt.Fprintf(os.Stderr, "Env: %s (preferred), %s (legacy)\n", envConfigNew, envConfigLegacy)
+	fmt.Fprintf(os.Stderr, "Env: %s (preferred)\n", envConfigNew)
 }
 
 func fileExists(path string) bool {
@@ -262,7 +255,7 @@ func configSearchOrder() []string {
 	if v := os.Getenv(envConfigNew); v != "" {
 		paths = append(paths, v+" (BUDDY_CONFIG)")
 	}
-	if v := os.Getenv(envConfigLegacy); v != "" {
+	if v := os.Getenv(envConfigNew); v != "" {
 		paths = append(paths, v+" (NCR_CONFIG legacy)")
 	}
 	paths = append(paths, "config.yaml (cwd)")
@@ -316,20 +309,7 @@ func loadConfigWithPresets(flagConfig string, positional string) (*config.Config
 	return cfg, flagConfig, nil
 }
 
-func collectCompatWarnings(configPath string) []string {
-	var warnings []string
-	if os.Getenv(envConfigLegacy) != "" {
-		warnings = append(warnings, fmt.Sprintf("%s is deprecated; use %s instead", envConfigLegacy, envConfigNew))
-	}
-	if strings.Contains(configPath, ".config/nostr-codex-runner") {
-		warnings = append(warnings, "config path uses legacy directory (.config/nostr-codex-runner); prefer ~/.config/buddy/config.yaml")
-	}
-	bin := filepath.Base(os.Args[0])
-	if strings.Contains(bin, "nostr-codex-runner") {
-		warnings = append(warnings, "binary name nostr-codex-runner is deprecated; prefer buddy/nostr-buddy")
-	}
-	return warnings
-}
+func collectCompatWarnings(configPath string) []string { return nil }
 
 func printHelp(args []string) {
 	if len(args) == 0 {

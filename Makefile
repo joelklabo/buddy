@@ -11,8 +11,6 @@ run:
 
 build:
 	go build -o $(BIN) ./cmd/runner
-	@ln -sf buddy bin/nostr-buddy
-	@ln -sf buddy bin/nostr-codex-runner
 
 lint:
 	go vet ./...
