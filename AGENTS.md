@@ -10,23 +10,23 @@
 8. Push
 9. GO BACK TO 1!
 
-# IMPORTANT
+## IMPORTANT
 
 - NEVER ask which issue you should pick next, use your best judgement and pick one.
 - ALWAYS create new issues/epics if you come across something in the course of your work that should be fixed or improved.
 - NEVER give me a summary, or a status report. Just do "Your Job" (See above)
 
-# NOTE
+## NOTE
 
 - If you ever see this error, run `bd doctor` for next steps:
     "⚠️  WARNING: JSONL file hash mismatch detected (bd-160)
      This indicates JSONL and export hashes are out of sync.
      Clearing export hashes to force full re-export."
 
-# VALID STOP REASONS
+## VALID STOP REASONS
 
 - stop reasons: `bd ready` (no tasks), unrecoverable error after retries.
 
-# INVALID STOP REASONS
+## INVALID STOP REASONS
 
 - "just reporting progress", "task looks hard", "I've used a lot of tokens", "status update".

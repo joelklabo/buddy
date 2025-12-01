@@ -3,6 +3,7 @@
 Design target: minimal flags, positional arguments, fast muscle memory, clear help. All commands assume the binary name is `buddy`; aliases like `nostr-buddy` or `bud` may point to the same binary.
 
 ## Commands
+
 - `buddy run <preset|config>`
   - If the argument matches a shipped preset name, load that preset and merge user overrides.
   - Otherwise treat as a file path to a config YAML (relative or absolute).
@@ -33,6 +34,7 @@ Design target: minimal flags, positional arguments, fast muscle memory, clear he
   - Prints semantic version + git commit; optional `--json` (only flag currently allowed) for scripting.
 
 ## Global behaviors
+
 - Config search order (for run):
   1) Explicit positional path (if not a preset name)
   2) `./config.yaml`
@@ -46,7 +48,8 @@ Design target: minimal flags, positional arguments, fast muscle memory, clear he
 - Environment variables: opt-in for advanced users (e.g., `BUDDY_CONFIG`, `BUDDY_PRESET_PATH`), but not required for basic use.
 
 ## Help copy (draft)
-```
+
+```bash
 buddy run <preset|config>      start the runner from a preset or YAML config
 buddy check <preset|config>    verify dependencies (json optional)
 buddy wizard [config-path]     guided setup; writes a config
@@ -57,6 +60,7 @@ buddy version                  show version info
 ```
 
 ## Open questions
+
 - Do we expose a `--json-logs` flag on `run` or keep logs text-only by default?
 - Should `wizard` support `--no-save` for privacy testing?
 - Confirm alias install strategy and how Homebrew formula handles it.
