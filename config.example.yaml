@@ -54,10 +54,11 @@ transports:
   # - type: "whatsapp"
   #   id: "whatsapp"
   #   config:
-  #     phone_number_id: "YOUR_PHONE_NUMBER_ID"
-  #     access_token: "YOUR_ACCESS_TOKEN"
-  #     verify_token: "your-verify-token"   # used by Meta webhook handshake
-  #     listen: ":8082"                     # webhook listener
+  #     account_sid: "ACxxxxxxxx"
+  #     auth_token: "your_twilio_auth_token"
+  #     from_number: "whatsapp:+15550001234"
+  #     listen: ":8083"
+  #     path: "/twilio/webhook"
   #     allowed_numbers:
   #       - "15555550100"
 

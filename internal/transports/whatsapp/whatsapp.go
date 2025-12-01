@@ -1,15 +1,19 @@
-// Package whatsapp implements a transport backed by the WhatsApp Cloud API (Meta Graph).
+// Package whatsapp implements a Twilio WhatsApp transport modeled after warelay.
 package whatsapp
 
 import (
 	"context"
-	"encoding/json"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -18,123 +22,102 @@ import (
 	transport "nostr-codex-runner/internal/transports"
 )
 
-// Config holds WhatsApp Cloud API settings.
-// Access tokens should be long-lived app tokens or user tokens with whatsapp_business_messaging scope.
+// Config for Twilio WhatsApp.
 type Config struct {
 	ID             string   `json:"id"`
-	PhoneNumberID  string   `json:"phone_number_id"`
-	AccessToken    string   `json:"access_token"`
-	VerifyToken    string   `json:"verify_token"`
-	Listen         string   `json:"listen"`          // e.g. ":8082"
-	BaseURL        string   `json:"base_url"`        // default: https://graph.facebook.com/v18.0
-	AllowedNumbers []string `json:"allowed_numbers"` // optional allowlist of sender phone numbers (E.164 without +)
+	AccountSID     string   `json:"account_sid"`
+	AuthToken      string   `json:"auth_token"`
+	FromNumber     string   `json:"from_number"` // e.g. "whatsapp:+1234567890"
+	Listen         string   `json:"listen"`      // ":8083"
+	Path           string   `json:"path"`        // "/twilio/webhook"
+	AllowedNumbers []string `json:"allowed_numbers"`
+	SignatureKey   string   `json:"signature_key"` // optional; falls back to AuthToken
+	BaseURL        string   `json:"base_url"`      // optional Twilio API base override for tests
 }
 
-// Transport implements the core.Transport interface for WhatsApp.
 type Transport struct {
-	cfg      Config
-	client   *http.Client
-	log      *slog.Logger
-	srv      *http.Server
-	started  chan string // publishes listen addr for tests/observability
-	startMu  sync.Mutex
-	shutdown func(context.Context) error
+	cfg Config
+	log *slog.Logger
+
+	addrMu sync.RWMutex
+	addr   string
 }
 
-// New constructs a WhatsApp transport.
 func New(cfg Config, logger *slog.Logger) (*Transport, error) {
 	if cfg.ID == "" {
 		cfg.ID = "whatsapp"
 	}
-	if cfg.PhoneNumberID == "" {
-		return nil, errors.New("whatsapp: phone_number_id required")
-	}
-	if cfg.AccessToken == "" {
-		return nil, errors.New("whatsapp: access_token required")
-	}
-	if cfg.VerifyToken == "" {
-		return nil, errors.New("whatsapp: verify_token required")
+	if cfg.AccountSID == "" || cfg.AuthToken == "" || cfg.FromNumber == "" {
+		return nil, errors.New("whatsapp: account_sid, auth_token, from_number required")
 	}
 	if cfg.Listen == "" {
-		cfg.Listen = ":8082"
+		cfg.Listen = ":8083"
+	}
+	if cfg.Path == "" {
+		cfg.Path = "/twilio/webhook"
+	}
+	if cfg.SignatureKey == "" {
+		cfg.SignatureKey = cfg.AuthToken
 	}
 	if cfg.BaseURL == "" {
-		cfg.BaseURL = "https://graph.facebook.com/v18.0"
+		cfg.BaseURL = "https://api.twilio.com"
 	}
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &Transport{
-		cfg:     cfg,
-		client:  &http.Client{Timeout: 15 * time.Second},
-		log:     logger.With("transport", "whatsapp"),
-		started: make(chan string, 1),
-	}, nil
+	return &Transport{cfg: cfg, log: logger.With("transport", "whatsapp")}, nil
 }
 
-// ID returns the transport identifier.
 func (t *Transport) ID() string { return t.cfg.ID }
 
-// Addr returns the bound listen address (useful in tests).
-func (t *Transport) Addr() string {
-	select {
-	case addr := <-t.started:
-		t.started <- addr
-		return addr
-	default:
-		return ""
-	}
-}
-
-// Start launches the webhook listener and blocks until ctx is canceled or a fatal error occurs.
 func (t *Transport) Start(ctx context.Context, inbound chan<- core.InboundMessage) error {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			// Verification callback
-			mode := r.URL.Query().Get("hub.mode")
-			token := r.URL.Query().Get("hub.verify_token")
-			challenge := r.URL.Query().Get("hub.challenge")
-			if mode == "subscribe" && token == t.cfg.VerifyToken {
-				w.WriteHeader(http.StatusOK)
-				_, _ = io.WriteString(w, challenge)
-				return
-			}
+	mux.HandleFunc(t.cfg.Path, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		if !t.verifySignature(r) {
 			http.Error(w, "forbidden", http.StatusForbidden)
 			return
-		case http.MethodPost:
-			body, err := io.ReadAll(r.Body)
-			if err != nil {
-				http.Error(w, "bad request", http.StatusBadRequest)
-				return
-			}
-			if err := t.handleWebhook(ctx, inbound, body); err != nil {
-				t.log.Warn("webhook handling failed", "err", err)
-			}
+		}
+		from := strings.TrimPrefix(r.Form.Get("From"), "whatsapp:")
+		body := r.Form.Get("Body")
+		msgID := r.Form.Get("MessageSid")
+		if len(t.cfg.AllowedNumbers) > 0 && !contains(t.cfg.AllowedNumbers, from) {
+			t.log.Warn("rejecting sender not in allowlist", "from", from)
 			w.WriteHeader(http.StatusOK)
 			return
-		default:
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
+		im := core.InboundMessage{
+			Transport: t.ID(),
+			Sender:    from,
+			Text:      body,
+			ThreadID:  msgID,
+		}
+		select {
+		case inbound <- im:
+		case <-ctx.Done():
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	})
-
-	ln, err := net.Listen("tcp", t.cfg.Listen)
-	if err != nil {
-		return fmt.Errorf("whatsapp listen: %w", err)
-	}
-	addr := ln.Addr().String()
-	t.started <- addr
 
 	srv := &http.Server{
 		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
-	t.startMu.Lock()
-	t.srv = srv
-	t.shutdown = srv.Shutdown
-	t.startMu.Unlock()
-
+	ln, err := net.Listen("tcp", t.cfg.Listen)
+	if err != nil {
+		return err
+	}
+	t.addrMu.Lock()
+	t.addr = ln.Addr().String()
+	t.addrMu.Unlock()
 	errCh := make(chan error, 1)
 	go func() {
 		if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -144,94 +127,78 @@ func (t *Transport) Start(ctx context.Context, inbound chan<- core.InboundMessag
 
 	select {
 	case <-ctx.Done():
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		_ = srv.Shutdown(shutdownCtx)
+		_ = srv.Shutdown(context.Background())
 		return nil
 	case err := <-errCh:
 		return err
 	}
 }
 
-// Send posts a message via the WhatsApp Cloud API.
+// Addr returns the listen address (for tests).
+func (t *Transport) Addr() string {
+	t.addrMu.RLock()
+	defer t.addrMu.RUnlock()
+	return t.addr
+}
+
 func (t *Transport) Send(ctx context.Context, msg core.OutboundMessage) error {
-	payload := map[string]any{
-		"messaging_product": "whatsapp",
-		"to":                msg.Recipient,
-		"type":              "text",
-		"text": map[string]any{
-			"body": msg.Text,
-		},
-	}
-	if msg.ThreadID != "" {
-		payload["context"] = map[string]any{"message_id": msg.ThreadID}
-	}
-	body, _ := json.Marshal(payload)
-	url := fmt.Sprintf("%s/%s/messages", strings.TrimRight(t.cfg.BaseURL, "/"), t.cfg.PhoneNumberID)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, strings.NewReader(string(body)))
+	form := url.Values{}
+	form.Set("To", "whatsapp:"+msg.Recipient)
+	form.Set("From", t.cfg.FromNumber)
+	form.Set("Body", msg.Text)
+	api := fmt.Sprintf("%s/2010-04-01/Accounts/%s/Messages.json", strings.TrimRight(t.cfg.BaseURL, "/"), t.cfg.AccountSID)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, api, strings.NewReader(form.Encode()))
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Authorization", "Bearer "+t.cfg.AccessToken)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.SetBasicAuth(t.cfg.AccountSID, t.cfg.AuthToken)
 
-	resp, err := t.client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 300 {
 		b, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("whatsapp send failed: %s", strings.TrimSpace(string(b)))
+		return fmt.Errorf("twilio send failed: %s", strings.TrimSpace(string(b)))
 	}
 	return nil
 }
 
-// handleWebhook parses incoming webhook payloads and emits InboundMessage events.
-func (t *Transport) handleWebhook(ctx context.Context, inbound chan<- core.InboundMessage, raw []byte) error {
-	var webhook struct {
-		Entry []struct {
-			Changes []struct {
-				Value struct {
-					Messages []struct {
-						From string `json:"from"`
-						ID   string `json:"id"`
-						Text struct {
-							Body string `json:"body"`
-						} `json:"text"`
-						Context struct {
-							ID string `json:"id"`
-						} `json:"context"`
-					} `json:"messages"`
-				} `json:"value"`
-			} `json:"changes"`
-		} `json:"entry"`
+func (t *Transport) verifySignature(r *http.Request) bool {
+	sig := r.Header.Get("X-Twilio-Signature")
+	if sig == "" {
+		return false
 	}
-	if err := json.Unmarshal(raw, &webhook); err != nil {
-		return fmt.Errorf("decode webhook: %w", err)
+	// Twilio signature: base64(HMAC-SHA256(token, url + sorted params))
+	rawURL := fmt.Sprintf("%s://%s%s", scheme(r), r.Host, r.URL.Path)
+	params := r.PostForm
+	var keys []string
+	for k := range params {
+		keys = append(keys, k)
 	}
-	for _, entry := range webhook.Entry {
-		for _, change := range entry.Changes {
-			for _, m := range change.Value.Messages {
-				if len(t.cfg.AllowedNumbers) > 0 && !contains(t.cfg.AllowedNumbers, m.From) {
-					t.log.Warn("rejecting sender not in allowlist", "from", m.From)
-					continue
-				}
-				im := core.InboundMessage{
-					Transport: t.ID(),
-					Sender:    m.From,
-					Text:      m.Text.Body,
-					ThreadID:  m.Context.ID,
-				}
-				select {
-				case inbound <- im:
-				case <-ctx.Done():
-					return ctx.Err()
-				}
-			}
-		}
+	sort.Strings(keys)
+	var payload strings.Builder
+	payload.WriteString(rawURL)
+	for _, k := range keys {
+		payload.WriteString(k)
+		payload.WriteString(params.Get(k))
 	}
-	return nil
+	mac := hmac.New(sha256.New, []byte(t.cfg.SignatureKey))
+	mac.Write([]byte(payload.String()))
+	expected := base64.StdEncoding.EncodeToString(mac.Sum(nil))
+	return hmac.Equal([]byte(sig), []byte(expected))
+}
+
+func scheme(r *http.Request) string {
+	if r.TLS != nil {
+		return "https"
+	}
+	if h := r.Header.Get("X-Forwarded-Proto"); h != "" {
+		return strings.Split(h, ",")[0]
+	}
+	return "http"
 }
 
 func contains(list []string, v string) bool {

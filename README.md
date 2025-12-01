@@ -24,7 +24,7 @@ The original Nostr Codex Runner is now just one config of this framework.
 See [Plugin catalog](docs/plugins/README.md) for the current list and how to add more.
 
 ## Supported plugins (shipped)
-- **Transports:** `nostr`, `mock`, `slack` (stub scaffold), `whatsapp` (Cloud API webhook)
+- **Transports:** `nostr`, `mock`, `slack` (stub scaffold), `whatsapp` (Twilio webhook + REST)
 - **Agents:** `codexcli`, `copilotcli`, `echo`, `http` (stub)
 - **Actions:** `shell`, `readfile`, `writefile`
 
