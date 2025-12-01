@@ -1,44 +1,30 @@
-# Repository Guidelines
+# YOUR JOB:
 
-## Project Structure & Module Organization
+1. Ask `bd ready` what to do
+2. Mark the issue `in_progress`
+3. Work on it
+4. Check your work, run tests
+5. Mark it as 'done'
+6. Create new issues or epics for any necessary work, or improvements, you came across in your work.
+7. Commit
+8. Push
+9. GO BACK TO 1!
 
-- `cmd/runner`: main entrypoint that wires config, Nostr client, command router, and buddy runner.
-- `internal/commands`: mini-DSL for DM payloads (`/new`, `/use`, `/shell`, etc.).
-- `internal/codex`: thin shell around `codex exec` and session tracking.
-- `internal/config`: YAML parsing and defaults; copy `config.example.yaml` → `config.yaml` and edit there.
-- `internal/nostrclient`: relay connections, DM decrypt/reply, replay protection.
-- `internal/store`: BoltDB-backed state (default path in config). Keep test data out of source control.
-- `scripts/`: helper shell scripts (`run.sh`, `install.sh`). Assets live in `assets/`.
+# IMPORTANT:
 
-## Build, Test, and Development Commands
+- NEVER ask which issue you should pick next, use your best judgement and pick one.
+- ALWAYS create new issues/epics if you come across something in the course of your work that should be fixed or improved.
+- NEVER give me a summary, or a status report. Just do "Your Job" (See above)
 
-- `make run` (optional `CONFIG=path`): start the runner using the given config.
-- `make build` (optional `BIN=...`): build binary to `bin/buddy` (+ alias symlinks).
-- `make test` or `go test ./...`: run all Go tests.
-- `make lint`: `go vet ./...`.
-- `make fmt`: `gofmt -w cmd internal`.
-- `go mod download`: fetch deps; run once after cloning.
+# NOTE:
+- If you ever see this error, run `bd doctor` for next steps:
+    "⚠️  WARNING: JSONL file hash mismatch detected (bd-160)
+     This indicates JSONL and export hashes are out of sync.
+     Clearing export hashes to force full re-export."
 
-## Coding Style & Naming Conventions
+# VALID STOP REASONS:
+- stop reasons: `bd ready` (no tasks), unrecoverable error after retries.
 
-- Go ≥1.22; format with `gofmt` before committing. Keep functions small, plumb `context.Context`, wrap errors with detail.
-- Logging: use structured `slog`; never log secrets (keys, tokens, decrypted DM text).
-- Naming: package-level types and functions stay idiomatic Go (`CamelCase`); config keys match the YAML schema (lower_snake).
+# INVALID STOP REASONS:
+- "just reporting progress", "task looks hard", "I've used a lot of tokens", "status update".
 
-## Testing Guidelines
-
-- Place tests beside code in `_test.go` files; prefer table-driven tests.
-- Aim for coverage on parsing (commands/config) and replay protections; mock Nostr/Codex I/O where possible.
-- Use `go test ./...` locally; add focused tests for regressions before merging.
-
-## Commit & Pull Request Guidelines
-
-- One issue per commit; reference the `bd` ticket in the subject, e.g. `a2d.2: harden DM dedup` or `Add replay debounce (closes buddy-3oa.3)`. Keep subjects imperative.
-- PRs: include a short summary, linked issue, and **Testing** section listing commands run (`make test`, `make run` smoke, etc.). Note config/ops changes and any backward-incompatible defaults.
-- Keep changes small and scoped; avoid combining refactors with feature work.
-
-## Security & Configuration Tips
-
-- Never commit real `config.yaml`, private keys, or state DBs; `.gitignore` already excludes them.
-- Restrict `runner.allowed_pubkeys` to trusted operators and prefer private relays for production.
-- If running with `sandbox: danger-full-access` or `approval: never`, do so only on trusted machines; otherwise tighten Codex CLI flags to limit blast radius.
