@@ -64,6 +64,7 @@ func Run(ctx context.Context, path string, p Prompter) (string, error) {
 	} else {
 		cfg = &config.Config{}
 	}
+	printPresetSummary(cfg, presetChoice, reg)
 
 	// Ensure minimal defaults.
 	if cfg.Storage.Path == "" {
@@ -214,6 +215,51 @@ func defaultStatePath() string {
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+func printPresetSummary(cfg *config.Config, preset string, reg Registry) {
+	fmt.Printf("\nUsing preset: %s\n", preset)
+	if desc := presetDescription(reg, preset); desc != "" {
+		fmt.Printf("  %s\n", desc)
+	}
+	fmt.Printf("  Transport(s): %s\n", strings.Join(transportTypes(cfg), ", "))
+	fmt.Printf("  Agent: %s\n", cfg.Agent.Type)
+	fmt.Printf("  Actions: %s\n\n", strings.Join(actionNames(cfg), ", "))
+}
+
+func presetDescription(reg Registry, name string) string {
+	for _, p := range reg.Presets {
+		if p.Name == name {
+			return p.Description
+		}
+	}
+	return ""
+}
+
+func transportTypes(cfg *config.Config) []string {
+	out := []string{}
+	for _, t := range cfg.Transports {
+		out = append(out, t.Type)
+	}
+	if len(out) == 0 {
+		return []string{"(none)"}
+	}
+	return out
+}
+
+func actionNames(cfg *config.Config) []string {
+	if len(cfg.Actions) == 0 {
+		return []string{"(none)"}
+	}
+	out := []string{}
+	for _, a := range cfg.Actions {
+		name := a.Type
+		if a.Name != "" && a.Name != a.Type {
+			name = fmt.Sprintf("%s (%s)", a.Type, a.Name)
+		}
+		out = append(out, name)
+	}
+	return out
 }
 
 // wizardPreflight runs dependency checks and optionally asks whether to continue on missing deps.
