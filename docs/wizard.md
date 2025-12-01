@@ -13,7 +13,7 @@ buddy wizard [config-path]
 1) **Pick a preset** (default `mock-echo`). Shows a one-line summary plus transports/agent/actions in use.
 2) **Fill secrets** only for that preset:
    - For nostr presets: relays (defaults), private key (masked), allowed pubkeys.
-   - For others, prompts are scoped to what’s missing.
+   - For others, prompts are scoped to what’s missing. `mock-echo` requires no secrets and works fully offline.
 3) **Actions**: if shell isn’t already enabled by the preset, ask whether to enable it (warned as high risk).
 4) **Dependency preflight**: runs the same checks as `buddy check` (binary/env/file/url/port). Warns and asks before continuing if required deps are missing.
 5) **Dry-run?** preview without writing.

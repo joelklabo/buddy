@@ -41,7 +41,7 @@ Goal: ship a binary-first "buddy" CLI with a fast install, guided wizard, preset
 30. P1 CLI UX copy/errors (friendly, masked secrets, exit codes).
 31. P1 Config search precedence (arg path > cwd config.yaml > ~/.config/buddy/config.yaml; env opt-in).
 33. P1 Release QA matrix (macOS/Linux/arm64; presets + wizard).
-34. P2 Offline bundle (embed default presets/assets; graceful no-network).
+34. P2 Offline bundle (embed default presets/assets; graceful no-network). ✅ presets embedded; mock-echo default in wizard.
 35. P2 Help/man page generation.
 36. P3 Windows support decision (scoop/winget or "not yet").
 
