@@ -1,4 +1,4 @@
-# `buddy` — Pick a transport, pick an agent, pick an action.
+# buddy — Pick a transport, pick an agent, pick an action
 
 ![buddy logo](assets/buddy-hero-wide.png)
 
@@ -50,6 +50,32 @@ flowchart LR
 - Agents: Claude/OpenAI-style HTTP, Copilot CLI, echo/local.
 - Actions: shell, readfile, writefile; add your own.
 - Safety: allowed pubkeys, dep checks, health/metrics endpoints.
+
+## Built-in types (keep updated)
+
+### Transports
+
+| Name | Mode | Notes |
+| --- | --- | --- |
+| `nostr` | DMs over relays | Default; allowlist enforced. |
+| `mock` | In-process harness | No network; great for tests. |
+| (planned) `email` | Mailgun webhook or IMAP | Inbound email → buddy; replies via SMTP/API. |
+
+### Agents
+
+| Name | Purpose | Notes |
+| --- | --- | --- |
+| `http` | Claude/OpenAI-style HTTP | Supports hosted or local endpoints. |
+| `copilotcli` | GitHub Copilot CLI | Generates commands; pair with shell action. |
+| `echo` | Mock echo/local | Offline testing. |
+
+### Actions
+
+| Name | Capability | Notes |
+| --- | --- | --- |
+| `shell` | Run commands | Allowlist + timeouts required. |
+| `readfile` | Read files | Root allowlists + size caps. |
+| `writefile` | Write files | Explicit opt-in; root allowlists + size caps. |
 
 ## Docs (essentials)
 
