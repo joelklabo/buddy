@@ -37,11 +37,13 @@ func runDepPreflight(cfg *config.Config, presetName string) error {
 			Optional: d.Optional,
 			Hint:     d.Hint,
 		})
-		if res.Status == "MISSING" {
+		switch res.Status {
+		case "MISSING":
 			missing++
 			fmt.Printf("❌ %s (%s) — %s\n", res.Name, res.Type, res.Details)
-		} else if res.Status == "WARN" {
+		case "WARN":
 			fmt.Printf("⚠️  %s (%s) — %s\n", res.Name, res.Type, res.Details)
+		default:
 		}
 	}
 	if missing > 0 {
