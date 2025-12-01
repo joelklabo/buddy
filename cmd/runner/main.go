@@ -336,11 +336,19 @@ func printHelp(args []string) {
 		fmt.Println("  -config <path>          config file path (default search: argv, ./config.yaml, ~/.config/buddy/config.yaml)")
 		fmt.Println("  -health-listen <addr>   optional health endpoint (e.g., 127.0.0.1:8081)")
 		fmt.Println("  -metrics-listen <addr>  optional Prometheus metrics endpoint")
+		fmt.Println("Examples:")
+		fmt.Println("  buddy run mock-echo")
+		fmt.Println("  buddy run claude-dm")
+		fmt.Println("  buddy run path/to/config.yaml")
 	case "wizard":
 		fmt.Println("buddy wizard [config-path] - guided setup; writes config or dry-runs")
 		fmt.Println("Prompts for relays/keys/allowed pubkeys, agent choice, actions.")
 	case "presets":
-		fmt.Println("buddy presets [name] - list built-in presets or show one (coming soon).")
+		fmt.Println("buddy presets [name] - list built-in presets or show one.")
+		fmt.Println("Examples:")
+		fmt.Println("  buddy presets")
+		fmt.Println("  buddy presets claude-dm")
+		fmt.Println("  buddy presets claude-dm --yaml")
 	case "version":
 		fmt.Println("buddy version - print version")
 	default:
