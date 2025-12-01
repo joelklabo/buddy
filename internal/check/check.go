@@ -2,6 +2,7 @@ package check
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -50,6 +51,37 @@ func (BinaryChecker) Check(dep DepInput) Result {
 		}
 	}
 	res.Details = path
+	return res
+}
+
+// EnvChecker ensures an environment variable is present.
+type EnvChecker struct{}
+
+func (EnvChecker) Check(dep DepInput) Result {
+	res := Result{Name: dep.Name, Type: dep.Type, Status: "OK"}
+	if v, ok := os.LookupEnv(dep.Name); !ok || v == "" {
+		res.Status = missingStatus(dep.Optional)
+		res.Details = fmt.Sprintf("env var %s not set (%s)", dep.Name, dep.Hint)
+		return res
+	}
+	return res
+}
+
+// FileChecker ensures a file or directory exists at the given path.
+type FileChecker struct{}
+
+func (FileChecker) Check(dep DepInput) Result {
+	res := Result{Name: dep.Name, Type: dep.Type, Status: "OK"}
+	if dep.Name == "" {
+		res.Status = missingStatus(dep.Optional)
+		res.Details = "path not provided"
+		return res
+	}
+	if _, err := os.Stat(dep.Name); err != nil {
+		res.Status = missingStatus(dep.Optional)
+		res.Details = fmt.Sprintf("%s (%s)", err.Error(), dep.Hint)
+		return res
+	}
 	return res
 }
 

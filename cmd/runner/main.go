@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/joelklabo/buddy/internal/app"
 	"github.com/joelklabo/buddy/internal/assets"
+	"github.com/joelklabo/buddy/internal/check"
 	"github.com/joelklabo/buddy/internal/config"
 	"github.com/joelklabo/buddy/internal/health"
 	"github.com/joelklabo/buddy/internal/metrics"
@@ -55,6 +57,11 @@ func main() {
 		return
 	case "presets":
 		if err := runPresets(args); err != nil {
+			fatalf(err.Error())
+		}
+		return
+	case "check":
+		if err := runCheck(args); err != nil {
 			fatalf(err.Error())
 		}
 		return
@@ -230,6 +237,7 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: buddy <command> [args]\n")
 	fmt.Fprintf(os.Stderr, "Commands:\n")
 	fmt.Fprintf(os.Stderr, "  run <preset|config>       start the runner\n")
+	fmt.Fprintf(os.Stderr, "  check <preset|config>     verify dependencies for a preset/config\n")
 	fmt.Fprintf(os.Stderr, "  wizard [config-path]      guided setup; supports dry-run\n")
 	fmt.Fprintf(os.Stderr, "  init-config [path]        write example config (default ./config.yaml)\n")
 	fmt.Fprintf(os.Stderr, "  presets [name]            list built-in presets or show one\n")
@@ -338,6 +346,15 @@ func printHelp(args []string) {
 		fmt.Println("  buddy presets                         # list all presets")
 		fmt.Println("  buddy presets claude-dm               # show summary and how to run")
 		fmt.Println("  buddy presets claude-dm --yaml        # print the YAML")
+	case "check":
+		fmt.Println("buddy check <preset|config> - verify declared dependencies")
+		fmt.Println("Examples:")
+		fmt.Println("  buddy check mock-echo")
+		fmt.Println("  buddy check copilot-shell")
+		fmt.Println("  buddy check path/to/config.yaml")
+		fmt.Println("Flags:")
+		fmt.Println("  -config <path>          config file path (default search: argv, ./config.yaml, ~/.config/buddy/config.yaml)")
+		fmt.Println("  -json                   output JSON report")
 	case "version":
 		fmt.Println("buddy version - print version")
 	default:
@@ -369,6 +386,96 @@ func runPresets(args []string) error {
 	fmt.Printf("Description: %s\n", descMap[name])
 	fmt.Printf("Run it:\n  buddy run %s\n\n", name)
 	fmt.Println("View YAML: buddy presets", name, "--yaml")
+	return nil
+}
+
+func runCheck(args []string) error {
+	fs := flag.NewFlagSet("check", flag.ExitOnError)
+	configPath := fs.String("config", defaultConfigPath(), "Path to config.yaml or preset name")
+	jsonOut := fs.Bool("json", false, "Output JSON report")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	var positional string
+	if fs.NArg() > 1 {
+		fmt.Fprintf(os.Stderr, "unexpected arguments: %v\n\n", fs.Args())
+		usage()
+		return fmt.Errorf("unexpected arguments: %v", fs.Args())
+	}
+	if fs.NArg() == 1 {
+		positional = fs.Arg(0)
+	}
+
+	cfg, presetName, err := loadConfigWithPresets(*configPath, positional)
+	if err != nil {
+		return err
+	}
+	deps := check.AggregateDeps(cfg, presetName, presets.PresetDeps())
+	if len(deps) == 0 {
+		fmt.Println("No dependencies declared; nothing to check.")
+		return nil
+	}
+
+	checkers := map[string]check.Checker{
+		"binary": check.BinaryChecker{},
+		"env":    check.EnvChecker{},
+		"file":   check.FileChecker{},
+	}
+
+	results := make([]check.Result, 0, len(deps))
+	for _, d := range deps {
+		input := check.DepInput{
+			Name:        d.Name,
+			Type:        d.Type,
+			Version:     d.Version,
+			Optional:    d.Optional,
+			Description: d.Description,
+			Hint:        d.Hint,
+		}
+		chk, ok := checkers[d.Type]
+		if !ok {
+			results = append(results, check.Result{
+				Name:     d.Name,
+				Type:     d.Type,
+				Status:   "WARN",
+				Details:  "unsupported dep type",
+				Optional: true,
+			})
+			continue
+		}
+		results = append(results, chk.Check(input))
+	}
+
+	if *jsonOut {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		return enc.Encode(results)
+	}
+
+	fmt.Println("Dependency check")
+	if presetName != "" {
+		fmt.Printf("Preset: %s\n", presetName)
+	}
+	fmt.Println()
+
+	missing := 0
+	for _, r := range results {
+		icon := "✅"
+		switch r.Status {
+		case "WARN":
+			icon = "⚠️ "
+		case "MISSING":
+			icon = "❌"
+			if !r.Optional {
+				missing++
+			}
+		}
+		fmt.Printf("%s %-6s %-16s %s\n", icon, r.Type, r.Name, r.Details)
+	}
+
+	if missing > 0 {
+		return fmt.Errorf("%d required dependencies missing", missing)
+	}
 	return nil
 }
 
