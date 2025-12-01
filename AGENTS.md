@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-- `cmd/runner`: main entrypoint that wires config, Nostr client, command router, and Codex runner.
+- `cmd/runner`: main entrypoint that wires config, Nostr client, command router, and buddy runner.
 - `internal/commands`: mini-DSL for DM payloads (`/new`, `/use`, `/shell`, etc.).
 - `internal/codex`: thin shell around `codex exec` and session tracking.
 - `internal/config`: YAML parsing and defaults; copy `config.example.yaml` → `config.yaml` and edit there.
@@ -13,7 +13,7 @@
 ## Build, Test, and Development Commands
 
 - `make run` (optional `CONFIG=path`): start the runner using the given config.
-- `make build` (optional `BIN=...`): build binary to `bin/nostr-codex-runner`.
+- `make build` (optional `BIN=...`): build binary to `bin/buddy` (+ alias symlinks).
 - `make test` or `go test ./...`: run all Go tests.
 - `make lint`: `go vet ./...`.
 - `make fmt`: `gofmt -w cmd internal`.
@@ -33,7 +33,7 @@
 
 ## Commit & Pull Request Guidelines
 
-- One issue per commit; reference the `bd` ticket in the subject, e.g. `a2d.2: harden DM dedup` or `Add replay debounce (closes nostr-codex-runner-2zo.3)`. Keep subjects imperative.
+- One issue per commit; reference the `bd` ticket in the subject, e.g. `a2d.2: harden DM dedup` or `Add replay debounce (closes nostr-codex-runner-3oa.3)`. Keep subjects imperative.
 - PRs: include a short summary, linked issue, and **Testing** section listing commands run (`make test`, `make run` smoke, etc.). Note config/ops changes and any backward-incompatible defaults.
 - Keep changes small and scoped; avoid combining refactors with feature work.
 
