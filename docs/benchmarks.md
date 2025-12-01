@@ -1,26 +1,9 @@
-# Benchmarks & Performance Notes – Issue 3oa.13
+# Benchmark & Performance Notes
 
-What to expect (rough order-of-magnitude)
-- Nostr relay latency: 100–500 ms typical per hop; DM roundtrip depends on relays used.
-- Agent latency: Codex/Claude/OpenAI: 1–5s per prompt; local LLM varies with model/hardware.
-- Action latency: shell/readfile usually <100ms unless command is heavy.
+Current state: no formal benchmark suite yet. Guidance for future work:
 
-Knobs that affect performance
-- `agent.config.timeout_seconds`: cap slow model calls.
-- `actions.shell.timeout_seconds` and `max_output`: prevent long-running commands and large payloads.
-- `runner.max_reply_chars`: truncation helps slow transports.
-- Relay choice and count: fewer relays may reduce fan-out delay; prefer reliable relays.
-
-Profiling tips
-- Enable debug logging temporarily to see timing per request.
-- Use `pprof` on the binary when running locally: set `GODEBUG`/`runtime/pprof` hooks as needed (not wired by default).
-- For action-heavy flows, profile the external command, not the runner.
-
-Load considerations
-- The runner is single-binary; concurrency comes from goroutines per transport and action. Monitor CPU/memory via `top` or Prom metrics if enabled.
-- Storage is BoltDB; heavy parallel writes may contend; keep action results small.
-
-Recommendations
-- Set conservative timeouts for shell actions in production.
-- Use local model preset for offline/low-latency scenarios.
-- Keep logs at info; switch to debug only when diagnosing delays.
+- Measure cold-start time for `buddy run mock-echo` and `buddy run claude-dm` on macOS/Linux (arm64/amd64).
+- Track latency per request for transports/agents (nostr relay RTT dominates).
+- Stress shell action with max_output limits to confirm truncation behavior.
+- Profile CPU/memory with `pprof` flags on local runs; identify hot paths in transports/agents.
+- Include results in release QA when added; keep assets small and binaries CGO=0 for portability.
