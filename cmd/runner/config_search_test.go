@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 	"path/filepath"
-	"testing"
 	"strings"
+	"testing"
 )
 
 func TestDefaultConfigPath_PrefersEnvNew(t *testing.T) {
