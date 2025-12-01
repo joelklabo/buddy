@@ -1,6 +1,6 @@
-# buddy – pluggable transport → agent → actions CLI
+# buddy — friendly transport → agent → actions runner
 
-> Binary-first, wizard-assisted runner for Nostr DMs (and more). Pick a preset or run the wizard, get a working config in minutes.
+Binary-first, wizard-assisted CLI that turns Nostr DMs (and other transports) into flexible agent pipelines. Pick a preset or run the wizard and get a working config in minutes.
 
 [![CI](https://github.com/joelklabo/buddy/actions/workflows/ci.yml/badge.svg)](https://github.com/joelklabo/buddy/actions/workflows/ci.yml)
 [![Release](https://github.com/joelklabo/buddy/actions/workflows/release.yml/badge.svg)](https://github.com/joelklabo/buddy/actions/workflows/release.yml)
@@ -17,32 +17,20 @@ brew install joelklabo/tap/buddy           # Homebrew (macOS/Linux)
 curl -fsSL https://get.buddy.sh | sh       # script installer (downloads release, verifies checksum)
 ```
 
-## Quick start (choose one)
+## Quick start — 3 steps
 
-1) **Wizard (guided setup)**
-```bash
-buddy wizard                               # writes ~/.config/buddy/config.yaml (masked secrets)
-buddy run -config ~/.config/buddy/config.yaml
-```
-
-2) **Preset (no edits)**
-```bash
-buddy run mock-echo                        # offline smoke test
-buddy run claude-dm                        # Nostr DM to Claude/OpenAI style HTTP
-buddy run copilot-shell              # Copilot + shell action (trusted operators only)
-```
-
-3) **Explicit config path**
-```bash
-buddy run path/to/config.yaml              # argv beats env/cwd
-```
-
-Expected output: a short startup banner then streaming logs; stop with Ctrl+C.
+1) **Install**: `brew install joelklabo/tap/buddy` (or the curl script above).
+2) **Pick a preset or wizard**:
+   - `buddy run mock-echo` (zero secrets, offline)
+   - `buddy run claude-dm` (Nostr → Claude/OpenAI HTTP)
+   - `buddy run copilot-shell` (Copilot + shell; trusted operators only)
+   - or `buddy wizard` to generate `~/.config/buddy/config.yaml` interactively.
+3) **DM it**: from an allowed pubkey, send `/new` and try a prompt. Stop with Ctrl+C.
 
 ## What it does
-- **Transport**: nostr DMs (default) or mock; more transports are pluggable.
-- **Agent**: codexcli, copilotcli, HTTP (Claude/OpenAI style), echo, local endpoints.
-- **Actions**: shell, readfile, writefile (extendable).
+- **Transports**: Nostr DMs (default) or mock; pluggable others.
+- **Agents**: Claude/OpenAI-style HTTP, Copilot CLI, local codexcli/echo.
+- **Actions**: shell, readfile, writefile; add your own.
 - Keeps session context, enforces allowlists, exposes optional health/metrics.
 
 ## CLI surface
@@ -55,7 +43,7 @@ buddy help                     show help
 ```
 
 ## Config search order
-1) argv `-config` path (or positional in future)
+1) Positional/flag: `buddy run <preset|path>` (flag `-config` still works)
 2) `./config.yaml`
 3) `~/.config/buddy/config.yaml`
 
@@ -68,11 +56,15 @@ buddy help                     show help
 - Presets: `docs/presets.md`
 
 ## Contributing
-- Issues tracked with `bd` (epic ` buddy-3oa`); one commit per issue.
+- Issues tracked with `bd` (epic `buddy-3oa`); one commit per issue.
 - Go 1.24+, `go test ./...` before pushing.
 - See `CONTRIBUTING.md` and `docs/style-guide.md`.
 - New here? Start with `buddy run mock-echo`, then pick a tiny doc fix or preset tweak and open a PR. Friendly reviews welcome.
-- New here? Try `buddy run mock-echo`, then open a PR with your first improvement. Friendly reviews welcome.
+
+## FAQ
+- **Do I need Go to use it?** No. Install a release (brew or script) and run presets; build from source is optional.
+- **Is shell safe?** Shell is powerful and risky—use `mock-echo` or `claude-dm` first, and keep `allowed_pubkeys` tight before enabling shell.
+- **Where do configs live?** By default `~/.config/buddy/config.yaml`; presets are built-in but can be overridden under `~/.config/buddy/presets/`.
 
 ## License
 MIT
