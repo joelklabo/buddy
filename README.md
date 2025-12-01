@@ -23,6 +23,13 @@ The original Nostr Codex Runner is now just one config of this framework.
 - App wiring: `internal/app/build.go` (reads `config.yaml` and instantiates plugins)
 See [Plugin catalog](docs/plugins/README.md) for the current list and how to add more.
 
+## Supported plugins (shipped)
+- **Transports:** `nostr`, `mock`, `slack` (stub scaffold)
+- **Agents:** `codexcli`, `copilotcli`, `echo`, `http` (stub)
+- **Actions:** `shell`, `readfile`, `writefile`
+
+These are all composable—pick any transport + one agent + any actions in `config.yaml`.
+
 ## Why
 - Stay keyboard-only and remote: send prompts via Nostr DMs, get Codex replies back as DMs.
 - Keep conversation context: runner tracks Codex `thread_id` per sender and resumes automatically.
