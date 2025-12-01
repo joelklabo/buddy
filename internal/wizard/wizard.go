@@ -44,7 +44,10 @@ func Run(ctx context.Context, path string, p Prompter) (string, error) {
 		}
 	}
 
-	transportChoice, err := p.AskSelect("Transport", []string{"nostr", "mock"}, "nostr")
+	reg := GetRegistry()
+
+	transportOptions := transportNames(reg.Transports)
+	transportChoice, err := p.AskSelect("Transport", transportOptions, defaultChoice("nostr", transportOptions))
 	if err != nil {
 		return "", err
 	}
@@ -87,14 +90,18 @@ func Run(ctx context.Context, path string, p Prompter) (string, error) {
 		}
 	}
 
-	agentChoice, err := p.AskSelect("Agent", []string{"http", "copilotcli", "echo"}, "http")
+	agentOptions := agentNames(reg.Agents)
+	agentChoice, err := p.AskSelect("Agent", agentOptions, defaultChoice("http", agentOptions))
 	if err != nil {
 		return "", err
 	}
 
-	enableShell, err := p.AskConfirm("Enable shell action? (high risk; trusted operators only)", false)
-	if err != nil {
-		return "", err
+	enableShell := actionDefault(reg.Actions, "shell")
+	if _, err := actionOption(reg.Actions, "shell"); err == nil {
+		enableShell, err = p.AskConfirm("Enable shell action? (high risk; trusted operators only)", enableShell)
+		if err != nil {
+			return "", err
+		}
 	}
 	dryRun, err := p.AskConfirm("Dry-run only (preview config without writing)?", false)
 	if err != nil {
@@ -242,6 +249,51 @@ func (surveyPrompter) AskConfirm(label string, def bool) (bool, error) {
 		return false, err
 	}
 	return ans, nil
+}
+
+func transportNames(opts []TransportOption) []string {
+	names := make([]string, 0, len(opts))
+	for _, o := range opts {
+		names = append(names, o.Name)
+	}
+	return names
+}
+
+func agentNames(opts []AgentOption) []string {
+	names := make([]string, 0, len(opts))
+	for _, o := range opts {
+		names = append(names, o.Name)
+	}
+	return names
+}
+
+func defaultChoice(defaultVal string, options []string) string {
+	for _, opt := range options {
+		if opt == defaultVal {
+			return defaultVal
+		}
+	}
+	if len(options) > 0 {
+		return options[0]
+	}
+	return defaultVal
+}
+
+func actionOption(actions []ActionOption, name string) (ActionOption, error) {
+	for _, a := range actions {
+		if a.Name == name {
+			return a, nil
+		}
+	}
+	return ActionOption{}, fmt.Errorf("action option %s not found", name)
+}
+
+func actionDefault(actions []ActionOption, name string) bool {
+	a, err := actionOption(actions, name)
+	if err != nil {
+		return false
+	}
+	return a.DefaultEnable
 }
 
 // StubPrompter is used in tests.
