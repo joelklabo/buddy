@@ -1,0 +1,54 @@
+project_name: buddy
+
+builds:
+  - id: buddy
+    main: ./cmd/runner
+    binary: buddy
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    env: [CGO_ENABLED=0]
+    ldflags:
+      - -s -w
+archives:
+  - id: buddy
+    format: tar.gz
+    builds: [buddy]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    replacements:
+      darwin: macOS
+    files:
+      - LICENSE
+      - config.example.yaml
+      - README.md
+checksum:
+  name_template: "{{ .ProjectName }}_checksums.txt"
+signs:
+  - cmd: cosign
+    args: ["sign-blob", "--output", "{{ .ArtifactPath }}.sig", "{{ .ArtifactPath }}"]
+    artifacts: all
+
+changelog:
+  sort: desc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^ci:'
+
+brews:
+  - name: buddy
+    tap: joelklabo/homebrew-tap
+    commit_author:
+      name: buddy-bot
+      email: bot@example.com
+    description: "Pluggable transport→agent→actions CLI (buddy)"
+    homepage: "https://github.com/joelklabo/buddy"
+    folder: Formula
+    install: |
+      bin.install "buddy"
+      bin.install_symlink "buddy" => "nostr-buddy"
+    test: |
+      system "#{bin}/buddy", "version"
+
+release:
+  draft: true
+  prerelease: false
