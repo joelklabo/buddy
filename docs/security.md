@@ -1,36 +1,38 @@
-# Security & Secrets – Issue 3oa.14
+# Security & Secrets
 
-Principles
-- Least privilege: enable only needed transports/actions; keep allowlists tight.
-- No secret logging: never print private keys, API tokens, or DM content in logs.
-- Operators only: treat shell action as high risk; keep access to trusted pubkeys.
+## Principles
+- Keep secrets local: configs live under `~/.config/buddy`, never committed.
+- Mask inputs: wizard uses password prompts for private keys/API keys and prints no secrets.
+- Log hygiene: default logging to stdout; avoid including secrets in prompts or configs; optional file log defaults to `~/.buddy/runner.log` with 0600 perms.
 
-Secrets handling
-- Nostr keys and API tokens should be provided via config/wizard prompts; not committed to git.
-- Wizard must mask secret input and avoid writing secrets to stdout/stderr.
-- If env vars are later supported, document them as opt-in and warn about process listing.
+## What not to log
+- Nostr private keys, API keys, bearer tokens, relay DMs, decrypted content.
+- Shell command outputs that may include secrets—prefer redaction if piping through agents.
 
-Logging
-- Default logs at info level are non-verbose. For debug, advise against running on shared hosts if secrets may surface.
-- Prefer JSON logs only when needed; redact where possible.
+## Runner hardening
+- Restrict `runner.allowed_pubkeys` to trusted operators.
+- Prefer private relays for production; avoid relying on open relays for sensitive workloads.
+- Use mock transport for local/offline testing to avoid network egress.
+- Keep `actions.shell` disabled unless required; scope allowlists and max_output.
+- Health/metrics listeners should bind to localhost unless explicitly exposed.
 
-Transport trust
-- Use trusted relays; prefer private relays for production. Avoid sending secrets in plaintext messages.
-- Configure `runner.allowed_pubkeys` to restrict control; keep list short and reviewed.
+## Dependency checks
+- `buddy check <preset>` and run preflight surface missing binaries/ports/relays before startup; fix those before enabling shell or external agents.
 
-Actions safety
-- `shell`: require explicit enable; set `timeout_seconds` and `max_output`; avoid broad workdirs.
-- `readfile`/`writefile`: set `roots` allowlist; avoid `/` or user home unless necessary.
+## Sandbox & blast radius
+- Keep workdirs limited; if using shell action, run the binary in a container/VM where possible.
+- Set `actions.*.roots` narrowly for read/write actions.
 
-Sandbox/approvals
-- Codex sandbox flags (`sandbox: danger-full-access`, `approval: never`) should be used only on trusted machines; document risks in README/FAQ.
+## Secret storage
+- Config values are plain YAML; rely on OS file perms (0600) and keep in user home. No keychain/KMS integration yet.
+- State DB (`~/.buddy/state.db`) may contain session transcripts; restrict access and avoid multi-user sharing.
 
-Storage
-- BoltDB state file may contain session/thread IDs and prompts. Place it in trusted locations; avoid world-readable permissions.
+## Release integrity
+- Releases include SHA256 checksums and optional cosign signatures (when configured). Verify downloads before running.
 
-Release artifacts
-- Ship checksums; consider signing (cosign) for verification.
-
-Incident response
-- Rotate keys if leaked; update config and restart runner.
-- Remove compromised relays from config; review logs for abuse.
+## Red-team checklist (quick)
+- Are relays private? If not, assume DMs can be observed.
+- Are allowed_pubkeys limited? If not, anyone can DM and trigger actions.
+- Is shell enabled? If yes, is it strictly allowlisted and monitored?
+- Are secrets absent from logs/metrics?
+- Are health/metrics endpoints bound to localhost?
