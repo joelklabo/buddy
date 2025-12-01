@@ -6,11 +6,13 @@
 buddy - pluggable transport → agent → actions runner with presets and wizard
 
 # SYNOPSIS
-**buddy run** <preset|config> [ -config path ] [ -health-listen addr ] [ -metrics-listen addr ]
+**buddy run** <preset|config> [ -config path ] [ -health-listen addr ] [ -metrics-listen addr ] [ -skip-check ]
 
 **buddy wizard** [config-path]
 
 **buddy presets** [name]
+
+**buddy check** <preset|config> [ -config path ] [ -json ]
 
 **buddy version**
 
@@ -21,13 +23,16 @@ buddy is a single binary that routes inbound messages (e.g., Nostr DMs) to an AI
 
 # COMMANDS
 **run**  
-Start the runner using a preset name or a YAML config path. Flags: -config, -health-listen, -metrics-listen.
+Start the runner using a preset name or a YAML config path. Flags: -config, -health-listen, -metrics-listen, -skip-check (skip dependency preflight).
 
 **wizard**  
 Interactive setup. Prompts for transport/relays/keys, agent choice, actions, and writes a config (supports dry-run).
 
 **presets**  
 List built-in presets or print one as YAML when a name is provided.
+
+**check**  
+Verify dependencies declared by config or preset. Flags: -config, -json.
 
 **version**  
 Print version info.
