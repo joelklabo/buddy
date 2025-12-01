@@ -15,8 +15,10 @@ jobs:
       - name: Brew update
         run: brew update
       - name: Tap joelklabo/tap
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git clone https://github.com/joelklabo/homebrew-tap /tmp/homebrew-tap
+          git clone https://x-access-token:${GH_TOKEN}@github.com/joelklabo/homebrew-tap /tmp/homebrew-tap
           brew tap joelklabo/tap /tmp/homebrew-tap
       - name: Brew info buddy
         env:
