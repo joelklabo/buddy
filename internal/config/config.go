@@ -72,9 +72,9 @@ type Project struct {
 
 // TransportConfig is a generic transport entry.
 type TransportConfig struct {
-	Type   string                 `yaml:"type"`
-	ID     string                 `yaml:"id"`
-	Config map[string]any         `yaml:"config"` // generic, transport-specific fields
+	Type   string         `yaml:"type"`
+	ID     string         `yaml:"id"`
+	Config map[string]any `yaml:"config"` // generic, transport-specific fields
 
 	// Nostr-specific fields (used when type=nostr)
 	Relays         []string `yaml:"relays"`
