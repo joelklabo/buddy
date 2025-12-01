@@ -55,6 +55,11 @@ buddy help                     show help
 - Wizard: `docs/wizard.md`
 - Presets: `docs/presets.md`
 
+## Want to help?
+- Read `CONTRIBUTING.md` (setup, style, test expectations) and peek at the `buddy-3oa` epic in `bd list`.
+- Pick a first issue: docs polish, new preset, or improving `buddy help`. If unsure, open a discussion and we’ll pair you up.
+- One commit per issue, tests before push. Friendly reviews welcome.
+
 ## Contributing
 - Issues tracked with `bd` (epic `buddy-3oa`); one commit per issue.
 - Go 1.24+, `go test ./...` before pushing.
