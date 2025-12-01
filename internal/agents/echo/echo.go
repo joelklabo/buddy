@@ -4,7 +4,7 @@ package echo
 import (
 	"context"
 
-	"nostr-codex-runner/internal/core"
+	"github.com/joelklabo/buddy/internal/core"
 )
 
 // Agent echoes prompts; intended for tests and examples.

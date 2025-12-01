@@ -11,7 +11,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"gopkg.in/yaml.v3"
 
-	"nostr-codex-runner/internal/config"
+	"github.com/joelklabo/buddy/internal/config"
 )
 
 // Prompter abstracts survey for testability.

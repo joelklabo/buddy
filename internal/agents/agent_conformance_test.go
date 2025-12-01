@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"nostr-codex-runner/internal/agents/echo"
-	"nostr-codex-runner/internal/core"
+	"github.com/joelklabo/buddy/internal/agents/echo"
+	"github.com/joelklabo/buddy/internal/core"
 )
 
 func TestAgentConformanceSimple(t *testing.T) {

@@ -4,7 +4,7 @@ package slack
 import (
 	"context"
 	"errors"
-	"nostr-codex-runner/internal/core"
+	"github.com/joelklabo/buddy/internal/core"
 )
 
 // Config for Slack transport (stub).

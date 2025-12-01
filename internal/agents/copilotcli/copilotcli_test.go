@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"nostr-codex-runner/internal/core"
+	"github.com/joelklabo/buddy/internal/core"
 )
 
 // create a fake copilot binary that returns static text.

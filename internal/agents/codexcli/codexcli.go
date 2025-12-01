@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"nostr-codex-runner/internal/codex"
-	"nostr-codex-runner/internal/config"
-	"nostr-codex-runner/internal/core"
+	"github.com/joelklabo/buddy/internal/codex"
+	"github.com/joelklabo/buddy/internal/config"
+	"github.com/joelklabo/buddy/internal/core"
 )
 
 // Config mirrors config.CodexConfig for agent use.

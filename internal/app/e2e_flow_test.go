@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"nostr-codex-runner/internal/config"
-	"nostr-codex-runner/internal/core"
-	"nostr-codex-runner/internal/store"
-	tmock "nostr-codex-runner/internal/transports/mock"
+	"github.com/joelklabo/buddy/internal/config"
+	"github.com/joelklabo/buddy/internal/core"
+	"github.com/joelklabo/buddy/internal/store"
+	tmock "github.com/joelklabo/buddy/internal/transports/mock"
 )
 
 // End-to-end smoke using mock transport + echo agent to ensure wiring works.

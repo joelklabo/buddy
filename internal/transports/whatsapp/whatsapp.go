@@ -18,8 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"nostr-codex-runner/internal/core"
-	transport "nostr-codex-runner/internal/transports"
+	"github.com/joelklabo/buddy/internal/core"
+	transport "github.com/joelklabo/buddy/internal/transports"
 )
 
 // Config for Twilio WhatsApp.

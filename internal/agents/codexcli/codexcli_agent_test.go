@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"nostr-codex-runner/internal/codex"
-	"nostr-codex-runner/internal/core"
+	"github.com/joelklabo/buddy/internal/codex"
+	"github.com/joelklabo/buddy/internal/core"
 )
 
 type fakeRunner struct {

@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"nostr-codex-runner/internal/config"
-	"nostr-codex-runner/internal/store"
+	"github.com/joelklabo/buddy/internal/config"
+	"github.com/joelklabo/buddy/internal/store"
 )
 
 func TestBuildFailsOnUnknownAgent(t *testing.T) {

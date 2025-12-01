@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"nostr-codex-runner/internal/config"
+	"github.com/joelklabo/buddy/internal/config"
 )
 
 func TestParseCodexJSONLSuccess(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"nostr-codex-runner/internal/core"
+	"github.com/joelklabo/buddy/internal/core"
 )
 
 func TestSlackIDAndSend(t *testing.T) {

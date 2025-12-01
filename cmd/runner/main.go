@@ -13,12 +13,12 @@ import (
 	"strings"
 	"syscall"
 
-	"nostr-codex-runner/internal/app"
-	"nostr-codex-runner/internal/config"
-	"nostr-codex-runner/internal/health"
-	"nostr-codex-runner/internal/metrics"
-	"nostr-codex-runner/internal/store"
-	"nostr-codex-runner/internal/wizard"
+	"github.com/joelklabo/buddy/internal/app"
+	"github.com/joelklabo/buddy/internal/config"
+	"github.com/joelklabo/buddy/internal/health"
+	"github.com/joelklabo/buddy/internal/metrics"
+	"github.com/joelklabo/buddy/internal/store"
+	"github.com/joelklabo/buddy/internal/wizard"
 	"runtime"
 	"runtime/debug"
 )
@@ -119,7 +119,7 @@ func runContext(parent context.Context, args []string) error {
 		return fmt.Errorf("start metrics: %w", err)
 	}
 
-	logger.Info("nostr-codex-runner starting")
+	logger.Info("buddy starting")
 
 	if err := runner.Start(ctx); err != nil && !errors.Is(err, context.Canceled) {
 		return fmt.Errorf("runtime error: %w", err)
@@ -171,7 +171,7 @@ func buildVersion() string {
 
 func printBanner(cfg *config.Config, pubKey string, version string) {
 	fmt.Printf("\n==============================\n")
-	fmt.Printf("nostr-codex-runner %s\n", version)
+	fmt.Printf("buddy %s\n", version)
 	fmt.Printf("pid %d • host %s • go %s\n", runnerPID, hostName, runtime.Version())
 	fmt.Printf("config loaded\n")
 	fmt.Printf("==============================\n\n")
@@ -216,10 +216,10 @@ func defaultConfigPath() string {
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage:\n")
-	fmt.Fprintf(os.Stderr, "  nostr-codex-runner run [-config path] [-health-listen addr] [-metrics-listen addr]\n")
-	fmt.Fprintf(os.Stderr, "  nostr-codex-runner wizard [config-path]\n")
-	fmt.Fprintf(os.Stderr, "  nostr-codex-runner version\n")
-	fmt.Fprintf(os.Stderr, "  nostr-codex-runner help\n\n")
+	fmt.Fprintf(os.Stderr, "  buddy run [-config path] [-health-listen addr] [-metrics-listen addr]\n")
+	fmt.Fprintf(os.Stderr, "  buddy wizard [config-path]\n")
+	fmt.Fprintf(os.Stderr, "  buddy version\n")
+	fmt.Fprintf(os.Stderr, "  buddy help\n\n")
 	fmt.Fprintf(os.Stderr, "Environment:\n")
 	fmt.Fprintf(os.Stderr, "  %s\tdefault config path (overrides -config default)\n", envConfigNew)
 	fmt.Fprintf(os.Stderr, "  %s\tlegacy default config path (deprecated)\n", envConfigLegacy)
@@ -263,7 +263,7 @@ func runWizard(args []string) error {
 		return err
 	}
 	fmt.Printf("Config written to %s\n", cfgPath)
-	fmt.Printf("Next: run `nostr-codex-runner run -config %s`\n", cfgPath)
+	fmt.Printf("Next: run `buddy run -config %s`\n", cfgPath)
 	return nil
 }
 
@@ -277,7 +277,7 @@ func collectCompatWarnings(configPath string) []string {
 	}
 	bin := filepath.Base(os.Args[0])
 	if strings.Contains(bin, "nostr-codex-runner") {
-		warnings = append(warnings, "binary name nostr-codex-runner is deprecated; future releases will use buddy/nostr-buddy")
+		warnings = append(warnings, "binary name nostr-codex-runner is deprecated; prefer buddy/nostr-buddy")
 	}
 	return warnings
 }

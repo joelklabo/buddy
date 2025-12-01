@@ -1,8 +1,9 @@
-module nostr-codex-runner
+module github.com/joelklabo/buddy
 
 go 1.24.10
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/nbd-wtf/go-nostr v0.52.3
 	github.com/prometheus/client_golang v1.19.1
 	go.etcd.io/bbolt v1.4.3
@@ -10,7 +11,6 @@ require (
 )
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.7 // indirect
 	github.com/ImVexed/fasturl v0.0.0-20230304231329-4e41488060f3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect

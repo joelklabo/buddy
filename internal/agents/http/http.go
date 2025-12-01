@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 
-	"nostr-codex-runner/internal/core"
+	"github.com/joelklabo/buddy/internal/core"
 )
 
 // Config describes a generic HTTP LLM endpoint.

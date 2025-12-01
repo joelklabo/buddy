@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"nostr-codex-runner/internal/core"
+	"github.com/joelklabo/buddy/internal/core"
 )
 
 // Config controls the Copilot CLI agent.

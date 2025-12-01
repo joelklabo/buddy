@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"nostr-codex-runner/internal/core"
+	"github.com/joelklabo/buddy/internal/core"
 )
 
 // Constructor builds an Action from config.

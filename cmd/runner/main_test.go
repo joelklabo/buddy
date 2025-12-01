@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"nostr-codex-runner/internal/config"
+	"github.com/joelklabo/buddy/internal/config"
 )
 
 func TestParseSubcommand(t *testing.T) {
@@ -86,7 +86,7 @@ func TestSetupLoggerWritesFile(t *testing.T) {
 func TestPrintBannerOutputs(t *testing.T) {
 	cfg := &config.Config{}
 	out := captureStdout(func() { printBanner(cfg, "pub", "v1.2.3") })
-	if !strings.Contains(out, "nostr-codex-runner v1.2.3") {
+	if !strings.Contains(out, "buddy v1.2.3") {
 		t.Fatalf("banner missing version: %s", out)
 	}
 }

@@ -1,7 +1,7 @@
 .PHONY: run build lint lint-ci test fmt install verify
 
 CONFIG ?= config.yaml
-BIN ?= bin/nostr-codex-runner
+BIN ?= bin/buddy
 
 init-config:
 	@test -f $(CONFIG) && echo "$(CONFIG) already exists" || (cp config.example.yaml $(CONFIG) && echo "Wrote $(CONFIG). Edit secrets before running.")
@@ -11,6 +11,8 @@ run:
 
 build:
 	go build -o $(BIN) ./cmd/runner
+	@ln -sf buddy bin/nostr-buddy
+	@ln -sf buddy bin/nostr-codex-runner
 
 lint:
 	go vet ./...

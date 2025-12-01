@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"nostr-codex-runner/internal/core"
-	tmock "nostr-codex-runner/internal/transports/mock"
+	"github.com/joelklabo/buddy/internal/core"
+	tmock "github.com/joelklabo/buddy/internal/transports/mock"
 )
 
 // Minimal contract checks for transports we can instantiate without secrets.

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"nostr-codex-runner/internal/core"
-	client "nostr-codex-runner/internal/nostrclient"
-	"nostr-codex-runner/internal/store"
+	"github.com/joelklabo/buddy/internal/core"
+	client "github.com/joelklabo/buddy/internal/nostrclient"
+	"github.com/joelklabo/buddy/internal/store"
 
 	"github.com/nbd-wtf/go-nostr"
 )

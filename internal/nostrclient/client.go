@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"nostr-codex-runner/internal/store"
+	"github.com/joelklabo/buddy/internal/store"
 
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/nbd-wtf/go-nostr/nip04"

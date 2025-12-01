@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"nostr-codex-runner/internal/core"
-	"nostr-codex-runner/internal/nostrclient"
-	"nostr-codex-runner/internal/store"
+	"github.com/joelklabo/buddy/internal/core"
+	"github.com/joelklabo/buddy/internal/nostrclient"
+	"github.com/joelklabo/buddy/internal/store"
 
 	"github.com/nbd-wtf/go-nostr"
 )

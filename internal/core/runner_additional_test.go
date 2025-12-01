@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"nostr-codex-runner/internal/commands"
-	"nostr-codex-runner/internal/store"
+	"github.com/joelklabo/buddy/internal/commands"
+	"github.com/joelklabo/buddy/internal/store"
 )
 
 // memoryStoreWithTime embeds memoryStore to tweak timestamps for timeout checks.

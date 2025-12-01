@@ -180,10 +180,10 @@ func (c *Config) applyDefaults(baseDir string) {
 		c.Runner.InitialPrompt = "You are an AI agent with shell access to this machine. Be concise, be careful, and always explain what you plan to do before running commands. Ask for confirmation before risky actions."
 	}
 	if c.Runner.ProfileName == "" {
-		c.Runner.ProfileName = "nostr-codex-runner"
+		c.Runner.ProfileName = "buddy"
 	}
 	if c.Runner.ProfileImage == "" {
-		c.Runner.ProfileImage = "https://raw.githubusercontent.com/joelklabo/nostr-codex-runner/main/assets/social-preview.svg"
+		c.Runner.ProfileImage = "https://raw.githubusercontent.com/joelklabo/buddy/main/assets/social-preview.svg"
 	}
 	// Normalize agent config (prefers agent.config, falls back to agent.codex, then root codex)
 	agentCfg := c.Agent.Config

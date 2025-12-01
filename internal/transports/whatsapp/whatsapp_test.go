@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"nostr-codex-runner/internal/core"
+	"github.com/joelklabo/buddy/internal/core"
 )
 
 func TestWebhookInbound(t *testing.T) {

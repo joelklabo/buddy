@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"nostr-codex-runner/internal/store"
+	"github.com/joelklabo/buddy/internal/store"
 )
 
 // mock action for shell

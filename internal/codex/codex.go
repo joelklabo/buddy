@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"nostr-codex-runner/internal/config"
+	"github.com/joelklabo/buddy/internal/config"
 )
 
 // Runner executes prompts through the codex CLI and extracts session metadata.

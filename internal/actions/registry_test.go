@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"nostr-codex-runner/internal/core"
+	"github.com/joelklabo/buddy/internal/core"
 )
 
 type fakeAction struct{ name string }

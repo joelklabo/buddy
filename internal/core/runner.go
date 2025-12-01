@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"nostr-codex-runner/internal/commands"
-	"nostr-codex-runner/internal/metrics"
-	"nostr-codex-runner/internal/store"
+	"github.com/joelklabo/buddy/internal/commands"
+	"github.com/joelklabo/buddy/internal/metrics"
+	"github.com/joelklabo/buddy/internal/store"
 )
 
 // Runner wires transports, agent, and actions together.
