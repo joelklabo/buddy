@@ -83,3 +83,20 @@ func newTempStore(t *testing.T) (*Store, func()) {
 	}
 	return st, func() { _ = st.Close() }
 }
+
+func TestCursorSaveAndLoad(t *testing.T) {
+	st, cleanup := newTempStore(t)
+	defer cleanup()
+
+	now := time.Now().UTC().Truncate(time.Millisecond)
+	if err := st.SaveCursor("alice", now); err != nil {
+		t.Fatalf("save cursor: %v", err)
+	}
+	got, err := st.LastCursor("alice")
+	if err != nil {
+		t.Fatalf("last cursor: %v", err)
+	}
+	if !got.Equal(now) {
+		t.Fatalf("cursor mismatch %v vs %v", got, now)
+	}
+}
