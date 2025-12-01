@@ -35,6 +35,7 @@ curl -fsSL https://get.buddy.sh | sh
 ## How it works (example)
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 flowchart LR
   A[Allowed sender DM<br/>/new top process?] --> B[Nostr transport]
   B --> C[buddy runner]
