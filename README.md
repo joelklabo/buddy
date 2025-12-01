@@ -1,8 +1,6 @@
 # buddy — friendly transport → agent → actions runner
 
-<div style="background:#000;display:flex;justify-content:center;padding:16px 0;">
-  <img src="assets/buddy-hero.png" alt="buddy logo" style="max-width: 1080px; width: 100%; height: auto;" />
-</div>
+![buddy logo](assets/buddy-hero-wide.png)
 
 Binary-first, wizard-assisted CLI that turns messages (Nostr by default, mock offline) into agent actions in minutes.
 
