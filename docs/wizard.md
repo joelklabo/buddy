@@ -1,6 +1,6 @@
-# buddy wizard – Issue 3oa.22
+# buddy wizard
 
-Quickest way to produce a working config without editing YAML.
+Quickest way to produce a working config without editing YAML. Preset-first, with a summary and dependency preflight to catch missing binaries early.
 
 ## Usage
 ```bash
@@ -9,13 +9,14 @@ buddy wizard [config-path]
 - If no path is given, writes `~/.config/buddy/config.yaml` (creates parent dirs).
 - If the file exists, prompts before overwrite.
 
-## What it asks
-1) Relays (defaults to two public relays)
-2) Nostr private key (masked input)
-3) Allowed pubkeys (comma-separated)
-4) Agent choice: http, copilotcli, or echo
-5) Whether to enable shell action (warned as high risk)
-6) Whether to dry-run (preview without writing)
+## Flow
+1) **Pick a preset** (default `mock-echo`). Shows a one-line summary plus transports/agent/actions in use.
+2) **Fill secrets** only for that preset:
+   - For nostr presets: relays (defaults), private key (masked), allowed pubkeys.
+   - For others, prompts are scoped to what’s missing.
+3) **Actions**: if shell isn’t already enabled by the preset, ask whether to enable it (warned as high risk).
+4) **Dependency preflight**: runs the same checks as `buddy check` (binary/env/file/url/port). Warns and asks before continuing if required deps are missing.
+5) **Dry-run?** preview without writing.
 
 ## What it writes
 - Transport: nostr with your relays and keys
@@ -33,6 +34,6 @@ buddy wizard [config-path]
 
 ## Notes
 - Uses masked prompts; secrets are not echoed.
-- Respects legacy config/search paths via CLI defaults, but wizard writes to the buddy path by default.
-- Add `--config` to `run` if you wrote to a custom path.
-- Future: will surface presets and mock transport option.
+- Writes to buddy paths by default; pass a custom path to override.
+- Same config search order as `buddy run` applies when you start the runner.
+- To bypass prereq checks when experimenting, re-run wizard and decline to continue if missing deps (or add them and rerun).
