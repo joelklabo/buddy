@@ -1,0 +1,5 @@
+default: true
+MD013: false          # line length
+MD033:
+  allowed_elements: [div, img]
+MD041: false          # allow badges before heading if needed
