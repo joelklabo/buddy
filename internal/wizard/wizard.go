@@ -187,7 +187,7 @@ func resolveConfigPath(path string) (string, error) {
 }
 
 func writeConfig(path string, cfg *config.Config) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
 		return fmt.Errorf("make config dir: %w", err)
 	}
 	data, err := yaml.Marshal(cfg)

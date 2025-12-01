@@ -497,7 +497,7 @@ func runInitConfig(args []string) error {
 		return fmt.Errorf("%s already exists", path)
 	}
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return fmt.Errorf("make dir: %w", err)
 	}
 	if err := os.WriteFile(path, assets.ConfigExample, 0o600); err != nil {
