@@ -3,6 +3,7 @@
 Goal: make `buddy help run` and `buddy help presets` show copy-paste examples.
 
 Proposed snippets
+
 - help run:
   - `buddy run mock-echo` (offline smoke) — expects echo replies in logs.
   - `buddy run claude-dm` — Nostr DM to Claude/OpenAI; needs API key + relays.
@@ -13,6 +14,7 @@ Proposed snippets
   - `buddy presets claude-dm --yaml` — prints YAML.
 
 Implementation plan
+
 - Update `printHelp` to print examples for run/presets commands.
 - Ensure man page includes these examples under COMMANDS/EXAMPLES.
 - Tests: capture help output and assert example lines exist.
