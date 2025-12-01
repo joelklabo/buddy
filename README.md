@@ -72,6 +72,7 @@ buddy help                     show help
 - Issues tracked with `bd` (epic `nostr-codex-runner-3oa`); one commit per issue.
 - Go 1.24+, `go test ./...` before pushing.
 - See `CONTRIBUTING.md` and `docs/style-guide.md`.
+- New here? Start with `buddy run mock-echo`, then pick a tiny doc fix or preset tweak and open a PR. Friendly reviews welcome.
 - New here? Try `buddy run mock-echo`, then open a PR with your first improvement. Friendly reviews welcome.
 
 ## License
