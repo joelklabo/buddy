@@ -2,9 +2,12 @@ package check
 
 import (
 	"fmt"
+	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // Result represents a single dependency check outcome.
@@ -82,6 +85,42 @@ func (FileChecker) Check(dep DepInput) Result {
 		res.Details = fmt.Sprintf("%s (%s)", err.Error(), dep.Hint)
 		return res
 	}
+	return res
+}
+
+// URLChecker performs a simple GET with a short timeout.
+type URLChecker struct{}
+
+func (URLChecker) Check(dep DepInput) Result {
+	res := Result{Name: dep.Name, Type: dep.Type, Status: "OK"}
+	client := &http.Client{Timeout: 3 * time.Second}
+	resp, err := client.Get(dep.Name)
+	if err != nil {
+		res.Status = missingStatus(dep.Optional)
+		res.Details = fmt.Sprintf("request failed (%s)", dep.Hint)
+		return res
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		res.Status = missingStatus(dep.Optional)
+		res.Details = fmt.Sprintf("status %d (%s)", resp.StatusCode, dep.Hint)
+		return res
+	}
+	return res
+}
+
+// PortChecker tries to connect to host:port.
+type PortChecker struct{}
+
+func (PortChecker) Check(dep DepInput) Result {
+	res := Result{Name: dep.Name, Type: dep.Type, Status: "OK"}
+	conn, err := net.DialTimeout("tcp", dep.Name, 2*time.Second)
+	if err != nil {
+		res.Status = missingStatus(dep.Optional)
+		res.Details = fmt.Sprintf("unreachable (%s)", dep.Hint)
+		return res
+	}
+	conn.Close()
 	return res
 }
 

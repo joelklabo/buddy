@@ -420,6 +420,8 @@ func runCheck(args []string) error {
 		"binary": check.BinaryChecker{},
 		"env":    check.EnvChecker{},
 		"file":   check.FileChecker{},
+		"url":    check.URLChecker{},
+		"port":   check.PortChecker{},
 	}
 
 	results := make([]check.Result, 0, len(deps))

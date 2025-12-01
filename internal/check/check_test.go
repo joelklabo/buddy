@@ -1,6 +1,9 @@
 package check
 
 import (
+	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -31,5 +34,43 @@ func TestFileChecker(t *testing.T) {
 	res = c.Check(DepInput{Name: "check.go", Type: "file"})
 	if res.Status != "OK" {
 		t.Fatalf("expected OK for existing file, got %s", res.Status)
+	}
+}
+
+func TestURLChecker(t *testing.T) {
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer s.Close()
+
+	c := URLChecker{}
+	res := c.Check(DepInput{Name: s.URL, Type: "url"})
+	if res.Status != "OK" {
+		t.Fatalf("expected OK for reachable url, got %s", res.Status)
+	}
+
+	res = c.Check(DepInput{Name: "http://127.0.0.1:1", Type: "url"})
+	if res.Status != "MISSING" {
+		t.Fatalf("expected MISSING for bad url, got %s", res.Status)
+	}
+}
+
+func TestPortChecker(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	addr := ln.Addr().String()
+	defer ln.Close()
+
+	c := PortChecker{}
+	res := c.Check(DepInput{Name: addr, Type: "port"})
+	if res.Status != "OK" {
+		t.Fatalf("expected OK for open port, got %s", res.Status)
+	}
+
+	res = c.Check(DepInput{Name: "127.0.0.1:9", Type: "port"})
+	if res.Status != "MISSING" {
+		t.Fatalf("expected MISSING for closed port, got %s", res.Status)
 	}
 }
