@@ -21,7 +21,7 @@ High-level flow
 2) Transport selection (default: nostr). If nostr: ask for relays (prefill defaults), private key (hidden), allowed pubkeys. Offer mock transport for offline test.
 3) Agent selection: options Claude/OpenAI HTTP, Copilot CLI, local LLM (HTTP/local). Collect necessary fields.
 4) Actions: default none; offer shell/readfile/writefile; warn about shell risk.
-5) Preset alignment: allow user to pick a preset to base on (claude-dm, nostr-copilot-shell, local-llm, mock-echo) which auto-fills choices above.
+5) Preset alignment: allow user to pick a preset to base on (claude-dm, copilot-shell, local-llm, mock-echo) which auto-fills choices above.
 6) Config path confirmation (default `~/.config/buddy/config.yaml`); create directories as needed.
 7) Write config; print summary and next-step commands (`buddy run <preset>` or `buddy run <config>`).
 8) Optional smoke test: start runner now? If yes, run with chosen preset/ config and stream logs until Ctrl+C.

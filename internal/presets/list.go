@@ -5,10 +5,10 @@ import "fmt"
 // List returns preset names and descriptions.
 func List() map[string]string {
 	return map[string]string{
-		"claude-dm":           "Nostr DM to Claude/OpenAI HTTP agent (no shell by default)",
-		"nostr-copilot-shell": "Nostr DM to Copilot CLI with shell action (trusted)",
-		"local-llm":           "Nostr DM to local HTTP LLM endpoint",
-		"mock-echo":           "Offline mock transport + echo agent",
+		"claude-dm":     "DMs to Claude/OpenAI HTTP agent (no shell by default)",
+		"copilot-shell": "DMs to Copilot CLI with shell action (trusted)",
+		"local-llm":     "DMs to local HTTP LLM endpoint",
+		"mock-echo":     "Offline mock transport + echo agent",
 	}
 }
 
@@ -17,8 +17,8 @@ func Get(name string) ([]byte, error) {
 	switch name {
 	case "claude-dm":
 		return ClaudeDM, nil
-	case "nostr-copilot-shell":
-		return NostrCopilotShell, nil
+	case "copilot-shell":
+		return CopilotShell, nil
 	case "local-llm":
 		return LocalLLM, nil
 	case "mock-echo":

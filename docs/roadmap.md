@@ -35,7 +35,7 @@ Goal: ship a binary-first "buddy" CLI with a fast install, guided wizard, preset
 
 ### CLI Productization
 26. P0 CLI spec/map (`buddy wizard`, `buddy run <preset|config.yaml>`, `buddy presets`, `buddy help`; arguments over flags).
-27. P0 Preset library (ship built-ins: `nostr-copilot-shell`, `claude-dm`, `local-llm`; assets/presets).
+27. P0 Preset library (ship built-ins: `copilot-shell`, `claude-dm`, `local-llm`; assets/presets).
 28. P0 Packaging & releases (goreleaser, checksums, Homebrew tap).
 29. P1 Install script (curl | sh; checksum; /usr/local/bin or ~/.local/bin).
 30. P1 CLI UX copy/errors (friendly, masked secrets, exit codes).

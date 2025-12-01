@@ -16,7 +16,7 @@ Smoke checklist (per platform)
 2) `./buddy --version` matches tag
 3) `buddy run mock-echo` starts and logs (Ctrl+C to stop)
 4) `buddy wizard --dry-run` completes without writing
-5) `buddy run nostr-copilot-shell` (or claude-dm) starts with sample config/preset (if secrets available, otherwise skip)
+5) `buddy run copilot-shell` (or claude-dm) starts with sample config/preset (if secrets available, otherwise skip)
 6) `buddy presets` lists built-ins
 7) `buddy help` shows commands
 

@@ -34,7 +34,7 @@ Setup steps
    ```
 6) Sample configs:
    - `config.example.yaml` → copy to `config.yaml`
-   - `sample-flows/` has preset configs (nostr-copilot, etc.).
+- `sample-flows/` has preset configs (copilot-shell, etc.).
 
 Paths & state
 - Config: `./config.yaml` for repo work; default runtime path `~/.config/buddy/config.yaml` once rename lands.

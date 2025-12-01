@@ -29,7 +29,7 @@ buddy run -config ~/.config/buddy/config.yaml
 ```bash
 buddy run mock-echo                        # offline smoke test
 buddy run claude-dm                        # Nostr DM to Claude/OpenAI style HTTP
-buddy run nostr-copilot-shell              # Copilot + shell action (trusted operators only)
+buddy run copilot-shell              # Copilot + shell action (trusted operators only)
 ```
 
 3) **Explicit config path**

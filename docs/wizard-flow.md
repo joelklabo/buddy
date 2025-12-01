@@ -8,7 +8,7 @@ This is the draft script/IA for `buddy wizard [config-path]`.
    - Confirm overwrite if file exists.
 
 2) **Choose a preset or blank**
-   - Options: `claude-dm`, `nostr-copilot-shell`, `local-llm`, `mock-echo`, `blank`.
+   - Options: `claude-dm`, `copilot-shell`, `local-llm`, `mock-echo`, `blank`.
    - Selecting a preset pre-fills later answers; user can still edit inputs.
 
 3) **Transport**

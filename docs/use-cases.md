@@ -30,7 +30,7 @@ Fast, copy-paste flows that assume you installed the `buddy` binary and have key
 ## 3) Custom action trigger / shell copilot
 - Start the preset:
   ```bash
-  buddy run nostr-copilot-shell
+  buddy run copilot-shell
   ```
 - What happens: combines nostr transport + Copilot agent + `shell` action. The runner will honor allowlists and action timeouts.
 - Try it:

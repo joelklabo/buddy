@@ -5,7 +5,7 @@ Preset names are positional arguments to `buddy run <preset>`. They can be overr
 | Name | Purpose | Transport | Agent | Actions | Secrets required | Notes |
 |------|---------|-----------|-------|---------|------------------|-------|
 | `claude-dm` | Chat via Nostr DMs to Claude/OpenAI-style HTTP backend | nostr | http (Claude/OpenAI) | none by default | API key, relays, allowed pubkeys | Good default demo; wizard should offer it first. |
-| `nostr-copilot-shell` | Operate host via DMs with Copilot generating commands; executes shell | nostr | copilotcli | shell | Copilot auth, relays, allowed pubkeys | High risk: keep to trusted operators; shell output truncated. |
+| `copilot-shell` | Operate host via DMs with Copilot generating commands; executes shell | nostr | copilotcli | shell | Copilot auth, relays, allowed pubkeys | High risk: keep to trusted operators; shell output truncated. |
 | `local-llm` | Offline/local LLM answering DMs | nostr (or mock) | http/local endpoint | none | local model endpoint URL or binary path; relays if nostr | Works air-gapped; recommend mock transport for pure local tests. |
 | `mock-echo` | No-network demo; echoes prompts | mock | echo | none | none | Good smoke test; use when relays or keys unavailable. |
 

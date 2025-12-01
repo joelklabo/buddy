@@ -17,7 +17,7 @@ Goal: 2-minute path to download buddy, verify, run a preset or wizard. No git cl
    - `buddy wizard` → answers: transport (nostr default), relays, private key input (hidden), allowed pubkeys, agent choice (Claude/OpenAI/local), action selection. Wizard writes `~/.config/buddy/config.yaml` (or provided path) and prints next command.
 
 4) Run a preset (no edits)
-   - `buddy run nostr-copilot-shell` (uses built-in preset; prompts for necessary secrets if missing; points at default relays).
+   - `buddy run copilot-shell` (uses built-in preset; prompts for necessary secrets if missing; points at default relays).
    - Alternative: `buddy run claude-dm` or `buddy run local-llm` (if offline/local model configured).
 
 5) 2-minute smoke test

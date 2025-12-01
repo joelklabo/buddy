@@ -11,7 +11,7 @@ Goal: one landing page that routes **Users** and **Contributors** quickly, keepi
    - 3-step install and run (`brew install buddy` / `curl | sh`, `buddy presets`, `buddy wizard` or `buddy run <preset>`).
    - Expected first DM/response; config path emitted.
 2) Presets
-   - Table of built-ins (`nostr-copilot-shell`, `claude-dm`, `local-llm`) with one-line purpose and run command.
+   - Table of built-ins (`copilot-shell`, `claude-dm`, `local-llm`) with one-line purpose and run command.
 3) Wizard
    - Why/when to use; sample session transcript; config output location.
 4) FAQ / Troubleshooting

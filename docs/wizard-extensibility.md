@@ -23,7 +23,7 @@ Testing
 Steps to implement
 1) Define registry types and helpers in `internal/wizard/registry.go`.
 2) Refactor `wizard.Run` to consume registry options instead of hard-coded choices.
-3) Add built-in options for nostr/mock, http/copilot/echo, shell/readfile/writefile, presets (claude-dm, nostr-copilot-shell, local-llm, mock-echo).
+3) Add built-in options for nostr/mock, http/copilot/echo, shell/readfile/writefile, presets (claude-dm, copilot-shell, local-llm, mock-echo).
 4) Update tests to inject minimal registries.
 5) Update docs to show how to add new options.
 

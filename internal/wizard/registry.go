@@ -69,7 +69,7 @@ var defaultRegistry = Registry{
 	},
 	Presets: []PresetOption{
 		{Name: "claude-dm", Description: "Nostr DM to Claude/OpenAI agent"},
-		{Name: "nostr-copilot-shell", Description: "Nostr DM to Copilot CLI + shell action"},
+		{Name: "copilot-shell", Description: "Nostr DM to Copilot CLI + shell action"},
 		{Name: "local-llm", Description: "Nostr DM to local HTTP LLM"},
 		{Name: "mock-echo", Description: "Mock transport + echo agent (offline)"},
 	},

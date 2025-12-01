@@ -10,12 +10,12 @@ Goal: sub-400 word README that sells the binary-first buddy CLI, shows how to in
    - Note OS/arch supported; alias collision warning (Buddy.Works).
 3) **Quick start** – 3 commands, argument-only:
    - `buddy presets` (list built-ins).
-   - `buddy wizard` (generate config interactively) or `buddy run nostr-copilot-shell` (preset shortcut).
+   - `buddy wizard` (generate config interactively) or `buddy run copilot-shell` (preset shortcut).
    - Show expected first DM/response flow and config path emitted.
 4) **Use cases** (links to docs/examples):
    - Nostr DM → Claude/OpenAI (preset `claude-dm`).
    - Local model / offline flow (preset `local-llm`).
-   - Custom action trigger / shell (`nostr-copilot-shell`).
+   - Custom action trigger / shell (`copilot-shell`).
 5) **Features** (bullet): presets, wizard, pluggable transports/agents/actions, session tracking, replay protection, logging/metrics.
 6) **CLI surface** (mini table):
    - `buddy run <preset|config.yaml>` – start runner.

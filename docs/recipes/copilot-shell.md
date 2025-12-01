@@ -15,9 +15,9 @@ This walks through running the pluggable runner with:
 - Go 1.22+ (for building) or a release binary.
 
 ## Configure
-Start from the ready-made sample `configs/nostr-copilot.yaml`:
+Start from the ready-made sample `configs/copilot-shell.yaml`:
 ```bash
-cp configs/nostr-copilot.yaml config.yaml
+cp configs/copilot-shell.yaml config.yaml
 ```
 Fill the placeholders:
 - `transports[0].private_key` – runner's nsec hex (never commit this).
@@ -26,8 +26,8 @@ Fill the placeholders:
 
 Key knobs:
 - `agent.type: copilotcli` – switches to Copilot agent.
-- `agent.config.binary` – path to `copilot` if not on PATH (legacy alias: `agent.codex.binary`).
-- `agent.config.extra_args` – e.g., `["--allow-all-tools"]` to let Copilot apply edits/execute without interactive approval (legacy alias: `agent.codex.extra_args`).
+- `agent.config.binary` – path to `copilot` if not on PATH.
+- `agent.config.extra_args` – e.g., `["--allow-all-tools"]` to let Copilot apply edits/execute without interactive approval.
 - `actions` – enable/disable shell and fs actions or tighten allowlists.
 - `runner.initial_prompt` – a guardrail shown to Copilot on new sessions.
 
@@ -36,6 +36,8 @@ Key knobs:
 make run                          # uses ./config.yaml
 # or point at a custom file
 ./bin/buddy -config /path/to/config.yaml
+# or use the built-in preset
+buddy run copilot-shell
 ```
 
 ## Use it
