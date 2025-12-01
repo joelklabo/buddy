@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -25,7 +26,10 @@ func Start(ctx context.Context, listen string, log *slog.Logger) error {
 	if listen == "" {
 		return nil
 	}
-	srv := &http.Server{Handler: promhttp.Handler()}
+	srv := &http.Server{
+		Handler:           promhttp.Handler(),
+		ReadHeaderTimeout: 5 * time.Second,
+	}
 	go func() {
 		<-ctx.Done()
 		_ = srv.Shutdown(context.Background())
