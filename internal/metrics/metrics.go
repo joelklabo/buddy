@@ -27,6 +27,7 @@ func Start(ctx context.Context, listen string, log *slog.Logger) error {
 		return nil
 	}
 	srv := &http.Server{
+		Addr:              listen,
 		Handler:           promhttp.Handler(),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
