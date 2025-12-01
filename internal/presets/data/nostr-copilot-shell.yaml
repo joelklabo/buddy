@@ -1,0 +1,25 @@
+meta:
+  description: Nostr DM to GitHub Copilot CLI with shell action (trusted operators only).
+  secrets: [private_key]
+  safety: Shell enabled; keep allowlist tight.
+transports:
+  - type: nostr
+    id: nostr
+    relays: ["wss://relay.damus.io", "wss://nos.lol"]
+    private_key: ""
+    allowed_pubkeys: []
+agent:
+  type: copilotcli
+  config:
+    binary: "copilot"
+    working_dir: "."
+    timeout_seconds: 120
+actions:
+  - type: shell
+    name: shell
+    workdir: "."
+    timeout_seconds: 30
+    max_output: 4000
+runner:
+  allowed_pubkeys: []
+  session_timeout_minutes: 120

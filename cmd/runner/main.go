@@ -17,6 +17,7 @@ import (
 	"github.com/joelklabo/buddy/internal/config"
 	"github.com/joelklabo/buddy/internal/health"
 	"github.com/joelklabo/buddy/internal/metrics"
+	"github.com/joelklabo/buddy/internal/presets"
 	"github.com/joelklabo/buddy/internal/store"
 	"github.com/joelklabo/buddy/internal/wizard"
 	"runtime"
@@ -50,8 +51,9 @@ func main() {
 		}
 		return
 	case "presets":
-		// stub until preset registry wired
-		fmt.Println("presets command not yet implemented; coming soon.")
+		if err := runPresets(args); err != nil {
+			fatalf(err.Error())
+		}
 		return
 	case "run":
 		if err := runContext(context.Background(), args); err != nil {
@@ -311,4 +313,20 @@ func printHelp(args []string) {
 	default:
 		usage()
 	}
+}
+
+func runPresets(args []string) error {
+	if len(args) == 0 {
+		for name, desc := range presets.List() {
+			fmt.Printf("%-22s %s\n", name, desc)
+		}
+		return nil
+	}
+	name := args[0]
+	data, err := presets.Get(name)
+	if err != nil {
+		return err
+	}
+	fmt.Print(string(data))
+	return nil
 }

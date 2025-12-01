@@ -1,0 +1,22 @@
+meta:
+  description: Nostr DM to Claude/OpenAI-style HTTP agent.
+  secrets: [api_key, private_key]
+  safety: Shell action disabled by default.
+transports:
+  - type: nostr
+    id: nostr
+    relays: ["wss://relay.damus.io", "wss://nos.lol"]
+    private_key: ""
+    allowed_pubkeys: []
+agent:
+  type: http
+  config:
+    base_url: "https://api.anthropic.com"
+    model: "claude-3-5-sonnet"
+    api_key: ""
+    timeout_seconds: 120
+actions: []
+runner:
+  allowed_pubkeys: []
+  session_timeout_minutes: 240
+  max_reply_chars: 8000
