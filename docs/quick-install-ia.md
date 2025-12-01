@@ -4,10 +4,10 @@ Goal: 2-minute path to download buddy, verify, run a preset or wizard. No git cl
 
 ## Flow to document
 1) Choose install method
-   - Homebrew: `brew install buddy` (or tap `brew install joelklabo/tap/buddy` once published).
-   - Script: `curl -fsSL https://get.buddy.sh | sh` (installs to ~/.local/bin or /usr/local/bin based on perms; uses latest release asset). Include checksum verification step (shasum -a 256).
+   - Homebrew: `brew install joelklabo/tap/buddy`.
+   - Script: `curl -fsSL https://get.buddy.sh | sh` (installs to ~/.local/bin or /usr/local/bin based on perms; verifies checksum).
    - Manual: download tarball from Releases, `chmod +x buddy`, move to PATH.
-   - Collision note: if another `buddy` exists (Buddy.Works, Livebud), prefer alias `nostr-buddy` or add to PATH earlier.
+   - Collision note: if another `buddy` exists (Buddy.Works, Livebud), add our binary earlier on PATH or create your own alias (e.g., `bud`).
 
 2) Verify install
    - `buddy --version` (shows version + git commit).
@@ -30,13 +30,11 @@ Goal: 2-minute path to download buddy, verify, run a preset or wizard. No git cl
 
 7) Prerequisites
    - OS/arch supported: macOS (arm64/amd64), Linux (arm64/amd64).
-   - Agent-specific deps: Codex CLI or HTTP/OpenAI keys; local LLM requirements if chosen.
+   - Agent-specific deps: Copilot CLI or Claude/OpenAI HTTP keys; local LLM requirements if chosen.
 
 8) Uninstall
    - Homebrew: `brew uninstall buddy`.
    - Script/manual: remove binary + config folder; note BoltDB state path.
 
-## Notes/TBD
-- Replace install URLs/tap names once repo rename and goreleaser pipeline are live.
-- Decide default alias behavior (likely ship `buddy`; optional `bud`/`nostr-buddy`).
-- Add checksum sample snippet once asset naming is set.
+## Notes
+- Add checksum sample snippet using `buddy_<version>_<os>_<arch>.tar.gz` and `buddy_checksums.txt`.
