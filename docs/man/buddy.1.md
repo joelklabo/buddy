@@ -36,8 +36,7 @@ Print version info.
 Show summary or command-specific help.
 
 # ENVIRONMENT
-**BUDDY_CONFIG** (preferred) — default config path when -config is not provided.  
-**NCR_CONFIG** (legacy) — still honored but deprecated.
+**BUDDY_CONFIG** — default config path when -config is not provided.
 
 # FILES
 `~/.config/buddy/config.yaml` — default config path.  
