@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -353,14 +355,44 @@ projects:
 	if err := os.WriteFile(cfgPath, []byte(cfgYAML), 0o644); err != nil {
 		t.Fatalf("write config: %v", err)
 	}
+	healthAddr := freePortAddr()
+	metricsAddr := freePortAddr()
+
 	ctx, cancel := context.WithCancel(context.Background())
+	errCh := make(chan error, 1)
 	go func() {
-		time.Sleep(150 * time.Millisecond)
-		cancel()
+		errCh <- runContext(ctx, []string{"-config", cfgPath, "-health-listen", healthAddr, "-metrics-listen", metricsAddr, "-skip-check"})
 	}()
-	if err := runContext(ctx, []string{"-config", cfgPath, "-health-listen", "127.0.0.1:0", "-metrics-listen", "127.0.0.1:0", "-skip-check"}); err != nil && err != context.Canceled {
+
+	time.Sleep(200 * time.Millisecond)
+	client := http.Client{Timeout: 500 * time.Millisecond}
+	if resp, err := client.Get("http://" + healthAddr + "/health"); err != nil || resp.StatusCode != 200 {
+		t.Fatalf("health endpoint check failed: %v status %v", err, statusCode(resp))
+	}
+	if resp, err := client.Get("http://" + metricsAddr + "/metrics"); err != nil || resp.StatusCode != 200 {
+		t.Fatalf("metrics endpoint check failed: %v status %v", err, statusCode(resp))
+	}
+
+	cancel()
+	if err := <-errCh; err != nil && err != context.Canceled {
 		t.Fatalf("runContext err: %v", err)
 	}
+}
+
+func freePortAddr() string {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return "127.0.0.1:0"
+	}
+	defer l.Close()
+	return l.Addr().String()
+}
+
+func statusCode(resp *http.Response) int {
+	if resp == nil {
+		return 0
+	}
+	return resp.StatusCode
 }
 
 func captureStdout(fn func()) string {

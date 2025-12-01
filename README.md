@@ -54,6 +54,7 @@ buddy help                     show help
 - Config reference: `docs/config.md`
 - Wizard: `docs/wizard.md`
 - Presets: `docs/presets.md`
+ - Offline local LLM mock recipe: `docs/recipes/local-llm-mock.md`
   - Override presets by dropping YAML in `~/.config/buddy/presets/<name>.yaml` (or `./presets/<name>.yaml`); built-ins are the fallback.
 
 ## Want to help?
