@@ -9,21 +9,26 @@
 [![Latest Release](https://img.shields.io/github/v/release/joelklabo/nostr-codex-runner?sort=semver)](https://github.com/joelklabo/nostr-codex-runner/releases/latest)
 
 Always-on bridge that listens for messages, feeds them into an AI agent, and executes optional host actions. Architecture is fully pluggable:
+
 - **Transport**: how messages arrive/leave (built-ins: Nostr DM, mock; Slack stub scaffold).
 - **Agent**: the model backend (built-ins: Codex CLI, echo, HTTP stub for OpenAI/Claude-style).
-- **Copilot agent**: use GitHub Copilot CLI by setting `agent.type: copilotcli` (requires `copilot` from https://github.com/github/copilot-cli).
+- **Copilot agent**: use GitHub Copilot CLI by setting `agent.type: copilotcli` (requires `copilot` from <https://github.com/github/copilot-cli>).
 - **Action**: host capabilities (built-ins: shell exec, fs read/write; extend with your own).
+
 The original Nostr Codex Runner is now just one config of this framework.
 
 ## Project layout (where plugins live)
+
 - Transports: `internal/transports/<name>` (nostr, mock, slack stub)
 - Agents: `internal/agents/<name>` (codexcli, copilotcli, echo, http stub)
 - Actions: `internal/actions/<name>` (shell, fs read/write)
 - Core runner/router: `internal/core`, `internal/commands`
 - App wiring: `internal/app/build.go` (reads `config.yaml` and instantiates plugins)
+
 See [Plugin catalog](docs/plugins/README.md) for the current list and how to add more.
 
 ## Supported plugins (shipped)
+
 - **Transports:** `nostr`, `mock`, `slack` (stub scaffold), `whatsapp` (Twilio webhook + REST)
 - **Agents:** `codexcli`, `copilotcli`, `echo`, `http` (stub)
 - **Actions:** `shell`, `readfile`, `writefile`
@@ -31,12 +36,14 @@ See [Plugin catalog](docs/plugins/README.md) for the current list and how to add
 These are all composable—pick any transport + one agent + any actions in `config.yaml`.
 
 ## Why
+
 - Stay keyboard-only and remote: send prompts via Nostr DMs, get Codex replies back as DMs.
 - Keep conversation context: runner tracks Codex `thread_id` per sender and resumes automatically.
 - Minimal surface area: single binary, YAML config, and one background process.
 - Inspiration: [warelay](https://github.com/steipete/warelay) for its plug-and-play relay approach.
 
 ## Command mini-DSL (DM payloads)
+
 - `/new [prompt]` — reset session; optional prompt starts a fresh session.
 - `/use <session-id>` — switch to an existing session.
 - `/raw <cmd>` — execute a shell command on the host (working dir defaults to your home directory).
@@ -45,26 +52,33 @@ These are all composable—pick any transport + one agent + any actions in `conf
 - _Anything else_ — treated as a prompt and executed in your active session (or a new one if none).
 
 ## Quick start (Nostr + Codex example)
+
 1. Copy `config.example.yaml` → `config.yaml` and fill secrets:
    - `runner.private_key` — hex Nostr secret key (nsec).
    - `runner.allowed_pubkeys` — list of pubkeys allowed to control the runner.
    - Adjust relays, Codex working directory, timeouts, etc.
+
 2. Run locally:
+
    ```bash
    make run              # uses config.yaml
    # or
    CONFIG=path/to/config.yaml ./scripts/run.sh
    ```
+
 3. DM the runner pubkey from an allowed pubkey. Examples:
-   ```
+
+   ```text
    /new
    /new Write a Go HTTP server that echoes requests.
    List the last 5 git commits in this repo.
    /status
    ```
+
 4. Responses include `session: <thread-id>` plus the latest model message (truncated to `max_reply_chars`).
 
 ### Make targets
+
 - `make run` – start with `config.yaml` (override `CONFIG=...`).
 - `make build` – build to `bin/nostr-codex-runner` (override `BIN=...`).
 - `make test` – run unit tests.
@@ -73,23 +87,29 @@ These are all composable—pick any transport + one agent + any actions in `conf
 - `make install` – `go install ./cmd/runner`.
 
 ## Install
+
 - From source: `go install github.com/joelklabo/nostr-codex-runner/cmd/runner@latest`
 - From release binaries (macOS/Linux amd64/arm64): grab the asset from the GitHub Releases page, `chmod +x nostr-codex-runner-*`, and run `./nostr-codex-runner --config config.yaml`.
 - Docker image is not published yet; use the binary or source builds above.
 - One-liner installer (downloads latest release to `~/.local/bin` and copies `config.example.yaml` → `config.yaml` if missing):
+
   ```bash
   curl -fsSL https://raw.githubusercontent.com/joelklabo/nostr-codex-runner/main/scripts/install.sh | bash
   ```
+
   Customize with env vars: `INSTALL_DIR`, `CONFIG_DIR`, `VERSION` (tag or `latest`).
-  - Prerequisites depend on the agent you choose:
-    - Codex CLI: binary on `PATH`; optional full-access flags (`sandbox: danger-full-access`, `approval: never`, `extra_args: ["--dangerously-bypass-approvals-and-sandbox"]`) — only on trusted machines.
-    - Copilot CLI: `npm install -g @github/copilot && copilot auth login`.
-    - HTTP/echo agents: no extra deps beyond Go.
+
+- Prerequisites depend on the agent you choose:
+  - Codex CLI: binary on `PATH`; optional full-access flags (`sandbox: danger-full-access`, `approval: never`, `extra_args: ["--dangerously-bypass-approvals-and-sandbox"]`) — only on trusted machines.
+  - Copilot CLI: `npm install -g @github/copilot && copilot auth login`.
+  - HTTP/echo agents: no extra deps beyond Go.
 
 ## Running it remotely / outside your LAN
+
 The runner only needs outbound internet for its transport (e.g., Nostr relays). For shell access, rely on actions like `/raw` or your own VPN/Tailscale/SSH setup; there is no web UI. Optional health endpoint: run with `-health-listen 127.0.0.1:8081` for `/health` JSON.
 
 ## Quick links
+
 - [Releases](https://github.com/joelklabo/nostr-codex-runner/releases)
 - [Open issues](https://github.com/joelklabo/nostr-codex-runner/issues)
 - [CI workflow](https://github.com/joelklabo/nostr-codex-runner/actions/workflows/ci.yml)
@@ -98,7 +118,9 @@ The runner only needs outbound internet for its transport (e.g., Nostr relays). 
 - [Recipe: WhatsApp + Codex](docs/recipes/whatsapp-codex.md)
 
 ## Configuration reference (plugins)
+
 `config.example.yaml` documents every field. Key knobs:
+
 - `transports[]`: list of transports. Example (Nostr): see config.example.yaml; legacy relays still default to nostr.
 - `runner.allowed_pubkeys`: access control.
 - `runner.session_timeout_minutes`: idle cutoff before discarding a session mapping.
@@ -108,10 +130,10 @@ The runner only needs outbound internet for its transport (e.g., Nostr relays). 
 - `logging.level`: `debug|info|warn|error`; `logging.format`: `text|json`.
 
 ## Background service (macOS-friendly)
+
 - tmux: `tmux new -s codex-runner 'cd /Users/honk/code/nostr-codex-runner && make run'`
 - launchd (recommended for “always on”):
-  - Make sure Codex and Node are on PATH (Homebrew defaults live in `/opt/homebrew/bin`). Either set `codex.binary` in `config.yaml` to an absolute path or pass PATH via the plist, e.g.:
-  ```xml
+  - Make sure Codex and Node are on PATH (Homebrew defaults live in `/opt/homebrew/bin`). Either set `codex.binary` in `config.yaml` to an absolute path or pass PATH via the plist, e.g.:  ```xml
   <?xml version="1.0" encoding="UTF-8"?>
   <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
   <plist version="1.0">
@@ -136,13 +158,16 @@ The runner only needs outbound internet for its transport (e.g., Nostr relays). 
   </dict>
   </plist>
   ```
+
   Load/restart:
-  ```
+
+  ```bash
   launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.honk.nostr-codex-runner.plist
   launchctl kickstart -k gui/$(id -u)/com.honk.nostr-codex-runner
   ```
 
 ## Architecture (pluggable core)
+
 - **Transports**: interface `Start/Send`; register via `internal/transports/registry.go`. Add new packages under `internal/transports/<name>`.
 - **Agents**: interface `Generate`; Codex CLI is default, swap in HTTP/OpenAI/Claude via config.
 - **Actions**: interface `Invoke`; shell/fs included. Register custom actions in `internal/actions`.
@@ -150,11 +175,13 @@ The runner only needs outbound internet for its transport (e.g., Nostr relays). 
 - **Config**: everything is declared in `config.yaml` (`transports[]`, `agent`, `actions[]`), so swapping Nostr→Slack or Codex→HTTP is config-only once the plugin exists.
 
 ### Adding your own plugins
+
 - Create a new folder under `internal/transports|agents|actions/<yourname>`, implement the interface, and call `registry.MustRegister` in `init()`.
 - Add a config stanza referencing `type: "<yourname>"` and any custom fields you need.
 - Extend `internal/app/build.go` to wire config → constructor.
 
 ### Example config: Nostr + Copilot CLI + basic actions
+
 ```yaml
 transports:
   - type: nostr
@@ -190,44 +217,50 @@ storage:
   path: ./state.db
 logging:
   level: info
+```
 
 ### Flow example: WhatsApp (Twilio) + Codex CLI
+
 1. Configure `config.yaml` (or add alongside other transports):
-```yaml
-transports:
-  - type: whatsapp
-    id: whatsapp
-    config:
-      account_sid: "ACxxxxxxxx"
-      auth_token: "your_twilio_auth_token"
-      from_number: "whatsapp:+15550001234"
-      listen: ":8083"
-      path: "/twilio/webhook"
-      allowed_numbers: ["15555550100"]   # optional allowlist (E.164 without +)
-agent:
-  type: codexcli
-  config:
-    binary: codex
-    working_dir: .
-    timeout_seconds: 900
-actions:
-  - type: shell
-  - type: readfile
-  - type: writefile
-runner:
-  max_reply_chars: 4000
-  initial_prompt: "You are an agent responding to WhatsApp users. Be concise and safe."
-storage:
-  path: ./state.db
-logging:
-  level: info
-```
+
+   ```yaml
+   transports:
+     - type: whatsapp
+       id: whatsapp
+       config:
+         account_sid: "ACxxxxxxxx"
+         auth_token: "your_twilio_auth_token"
+         from_number: "whatsapp:+15550001234"
+         listen: ":8083"
+         path: "/twilio/webhook"
+         allowed_numbers: ["15555550100"]   # optional allowlist (E.164 without +)
+   agent:
+     type: codexcli
+     config:
+       binary: codex
+       working_dir: .
+       timeout_seconds: 900
+   actions:
+     - type: shell
+     - type: readfile
+     - type: writefile
+   runner:
+     max_reply_chars: 4000
+     initial_prompt: "You are an agent responding to WhatsApp users. Be concise and safe."
+   storage:
+     path: ./state.db
+   logging:
+     level: info
+   ```
+
 2. Run `make run`.
+
 3. Expose `listen` publicly (e.g., `ngrok http 8083`) and set your Twilio WhatsApp webhook URL to `https://<public>/twilio/webhook`.
+
 4. Send a WhatsApp message from an allowed number; the runner replies via Codex.
-```
 
 ### Slack stub config example (transport swap)
+
 ```yaml
 transports:
   - type: slack
@@ -244,6 +277,7 @@ projects:
 ```
 
 ## Development
+
 - Requirements: Go ≥1.22, Codex CLI installed and on PATH for the Codex agent; other agents may have their own deps.
 - Commands: `make run`, `make build`, `make test`, `make lint`, `make fmt`, `make install`.
 - CI extras: coverage, staticcheck, misspell+gofmt, govulncheck, gosec, docker build, release.
@@ -251,14 +285,18 @@ projects:
 - Issue workflow: use `bd` (`bd create --parent nostr-codex-runner-2zo ...`) and close issues with one commit per issue.
 
 ## Security
+
 - Keep `config.yaml` and keys private (already in `.gitignore`).
 - Use trusted relays; consider a private relay for production.
 - Limit `allowed_pubkeys` to operators you trust.
 - Report vulnerabilities via a private GitHub security advisory (see `SECURITY.md`).
 
 ## Contributing
+
 See `CONTRIBUTING.md` for how to propose changes, run checks, and follow the `bd`/commit conventions.
 
 ## License
+
 MIT — see `LICENSE`.
+
 - Initial prompt: `runner.initial_prompt` (prepended once for new sessions). Set it to remind the agent of its purpose.
