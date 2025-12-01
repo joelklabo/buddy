@@ -1,10 +1,10 @@
-# Local Dev Setup (Contributors) – Issue 3oa.9
+# Local Dev Setup (Contributors)
 
 Scope: for contributors. End users should install the `buddy` binary from releases or brew.
 
 Prereqs
-- Go ≥1.22
-- Codex CLI on PATH if using codex agent tests
+- Go ≥1.24
+- Copilot CLI or HTTP keys optional (only if you test those agents)
 - `bd` installed (issue tracking)
 - Access to test Nostr relays (for integration flows)
 
@@ -20,7 +20,7 @@ Setup steps
    ```
 3) Build & run:
    ```bash
-   make build      # bin/buddy (+ nostr-buddy symlink)
+   make build      # bin/buddy
    make run        # uses config.yaml
    ```
 4) Formatting & lint:
@@ -37,9 +37,9 @@ Setup steps
 - `sample-flows/` has preset configs (copilot-shell, etc.).
 
 Paths & state
-- Config: `./config.yaml` for repo work; default runtime path `~/.config/buddy/config.yaml` once rename lands.
+- Config: `./config.yaml` for repo work; default runtime path `~/.config/buddy/config.yaml`.
 - State DB: `state.db` (BoltDB) — excluded by .gitignore; keep test DBs out of git.
-- Presets: `assets/presets` (embedded when packaging); user overrides in `~/.config/buddy/presets/`.
+- Presets: embedded under `internal/presets/data`; user overrides in `~/.config/buddy/presets/`.
 
 Testing notes
 - Prefer table-driven tests; place alongside code in `_test.go`.
@@ -49,6 +49,6 @@ bd workflow
 - One issue per commit; create under epic `buddy-3oa`.
 - Commit message should close the issue, e.g., `Some change (closes buddy-3oa.X)`.
 
-After rename
-- Module path is `github.com/joelklabo/buddy`.
-- Binaries: `buddy` (+ `nostr-buddy` alias).
+Module
+- Path: `github.com/joelklabo/buddy`.
+- Binary: `buddy` (no shipped alias).
