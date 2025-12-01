@@ -40,6 +40,9 @@ func main() {
 	case "version":
 		fmt.Printf("%s\n", buildVersion())
 		return
+	case "help", "-h", "--help":
+		usage()
+		return
 	case "run":
 		if err := runContext(context.Background(), args); err != nil {
 			fatalf(err.Error())
@@ -70,7 +73,7 @@ func runContext(parent context.Context, args []string) error {
 
 	cfg, err := config.Load(*configPath)
 	if err != nil {
-		return fmt.Errorf("load config: %w", err)
+		return friendlyConfigErr(*configPath, err)
 	}
 
 	buildVer = buildVersion()
@@ -204,7 +207,8 @@ func defaultConfigPath() string {
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage:\n")
 	fmt.Fprintf(os.Stderr, "  nostr-codex-runner run [-config path] [-health-listen addr] [-metrics-listen addr]\n")
-	fmt.Fprintf(os.Stderr, "  nostr-codex-runner version\n\n")
+	fmt.Fprintf(os.Stderr, "  nostr-codex-runner version\n")
+	fmt.Fprintf(os.Stderr, "  nostr-codex-runner help\n\n")
 	fmt.Fprintf(os.Stderr, "Environment:\n")
 	fmt.Fprintf(os.Stderr, "  %s\tdefault config path (overrides -config default)\n", envConfigNew)
 	fmt.Fprintf(os.Stderr, "  %s\tlegacy default config path (deprecated)\n", envConfigLegacy)
@@ -213,4 +217,27 @@ func usage() {
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+func friendlyConfigErr(path string, err error) error {
+	if errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("config not found at %s. Searched (in order): %s. Hint: run the wizard or copy config.example.yaml.", path, strings.Join(configSearchOrder(), ", "))
+	}
+	return fmt.Errorf("load config %s: %w", path, err)
+}
+
+func configSearchOrder() []string {
+	paths := []string{}
+	if v := os.Getenv(envConfigNew); v != "" {
+		paths = append(paths, v+" (BUDDY_CONFIG)")
+	}
+	if v := os.Getenv(envConfigLegacy); v != "" {
+		paths = append(paths, v+" (NCR_CONFIG legacy)")
+	}
+	paths = append(paths, "config.yaml (cwd)")
+	if home, err := os.UserHomeDir(); err == nil {
+		paths = append(paths, filepath.Join(home, ".config", "buddy", "config.yaml"))
+		paths = append(paths, filepath.Join(home, ".config", "nostr-codex-runner", "config.yaml")+" (legacy)")
+	}
+	return paths
 }
