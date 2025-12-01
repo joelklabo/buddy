@@ -11,6 +11,7 @@
 Always-on bridge that listens for messages, feeds them into an AI agent, and executes optional host actions. Architecture is fully pluggable:
 - **Transport**: how messages arrive/leave (built-ins: Nostr DM, mock; Slack stub scaffold).
 - **Agent**: the model backend (built-ins: Codex CLI, echo, HTTP stub for OpenAI/Claude-style).
+- **Copilot agent**: use GitHub Copilot CLI by setting `agent.type: copilotcli` (requires `gh` + Copilot CLI installed).
 - **Action**: host capabilities (built-ins: shell exec, fs read/write; extend with your own).
 The original Nostr Codex Runner is now just one config of this framework.
 
@@ -131,6 +132,43 @@ The runner only needs outbound internet for its transport (e.g., Nostr relays). 
 - Create a new folder under `internal/transports|agents|actions/<yourname>`, implement the interface, and call `registry.MustRegister` in `init()`.
 - Add a config stanza referencing `type: "<yourname>"` and any custom fields you need.
 - Extend `internal/app/build.go` to wire config → constructor.
+
+### Example config: Nostr + Copilot CLI + basic actions
+```yaml
+transports:
+  - type: nostr
+    id: nostr
+    relays: ["wss://relay.damus.io"]
+    private_key: "<your_nsec_hex>"
+    allowed_pubkeys: ["<operator_npub_hex>"]
+agent:
+  type: copilotcli
+  codex:                # reused fields: set binary/working_dir/timeout
+    binary: gh          # must have GitHub Copilot CLI enabled: gh extension install github/gh-copilot
+    working_dir: .
+    timeout_seconds: 120
+actions:
+  - type: shell
+    name: shell
+    workdir: .
+    timeout_seconds: 30
+    max_output: 4000
+  - type: readfile
+    roots: ["."]
+    max_bytes: 65536
+  - type: writefile
+    roots: ["."]
+    allow_write: true
+    max_bytes: 65536
+runner:
+  allowed_pubkeys: ["<operator_npub_hex>"]
+  max_reply_chars: 8000
+  initial_prompt: "You are an agent running via Copilot CLI. Be concise and safe."
+storage:
+  path: ./state.db
+logging:
+  level: info
+```
 
 ### Slack stub config example (transport swap)
 ```yaml

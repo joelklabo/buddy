@@ -8,6 +8,7 @@ import (
 	"nostr-codex-runner/internal/actions/fs"
 	"nostr-codex-runner/internal/actions/shell"
 	"nostr-codex-runner/internal/agents/codexcli"
+	"nostr-codex-runner/internal/agents/copilotcli"
 	"nostr-codex-runner/internal/agents/echo"
 	"nostr-codex-runner/internal/agents/http"
 	"nostr-codex-runner/internal/config"
@@ -43,6 +44,12 @@ func Build(cfg *config.Config, st *store.Store, logger *slog.Logger) (*core.Runn
 		agent = echo.New()
 	case "http":
 		agent = http.New(http.Config{APIBase: cfg.Agent.Codex.Binary, Model: cfg.Agent.Codex.Profile}) // placeholder reuse fields
+	case "copilotcli":
+		agent = copilotcli.New(copilotcli.Config{
+			Binary:         cfg.Agent.Codex.Binary,
+			WorkingDir:     cfg.Agent.Codex.WorkingDir,
+			TimeoutSeconds: cfg.Agent.Codex.TimeoutSeconds,
+		})
 	default:
 		return nil, fmt.Errorf("unknown agent type %s", cfg.Agent.Type)
 	}

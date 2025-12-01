@@ -1,0 +1,45 @@
+# Example config: Nostr transport + GitHub Copilot CLI agent + basic actions.
+
+transports:
+  - type: nostr
+    id: nostr
+    relays:
+      - wss://relay.damus.io
+    private_key: "<your_nostr_hex_private_key>"
+    allowed_pubkeys:
+      - "<operator_npub_hex>"
+
+agent:
+  type: copilotcli
+  codex:
+    binary: gh                # requires gh with Copilot CLI enabled
+    working_dir: .
+    timeout_seconds: 120
+
+actions:
+  - type: shell
+    name: shell
+    workdir: .
+    timeout_seconds: 30
+    max_output: 4000
+    allowed: []
+  - type: readfile
+    roots: ["."]
+    max_bytes: 65536
+  - type: writefile
+    roots: ["."]
+    allow_write: true
+    max_bytes: 65536
+
+runner:
+  allowed_pubkeys:
+    - "<operator_npub_hex>"
+  max_reply_chars: 8000
+  session_timeout_minutes: 240
+  initial_prompt: "You are an agent using GitHub Copilot CLI. Be concise, safe, and confirm before risky changes."
+
+storage:
+  path: ./state.db
+
+logging:
+  level: info
