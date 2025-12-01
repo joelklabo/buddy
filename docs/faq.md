@@ -1,28 +1,38 @@
-# FAQ / Troubleshooting – Issue 3oa.12
+# Buddy FAQ / Troubleshooting
 
-**Install picks wrong buddy (collision)**
-- Symptom: running `buddy` opens Buddy.Works CLI. Fix: install alias `nostr-buddy` or put our binary earlier in PATH.
+## Install
+- **`buddy: command not found`** – Ensure `~/bin`, `~/.local/bin`, or `/usr/local/bin` is on PATH. Homebrew: `brew install joelklabo/tap/buddy`. Script: `curl -fsSL https://get.buddy.sh | sh`.
+- **Checksum mismatch** – Re-download; verify against `buddy_checksums.txt` from the release. On macOS: `shasum -a 256 buddy_<ver>_macOS_arm64.tar.gz`.
 
-**Config not found**
-- Symptom: "load config" error. Fix: pass path explicitly `buddy run path/to/config.yaml` or place config in cwd; default search order will be argv > ./config.yaml > ~/.config/buddy/config.yaml.
+## Running presets
+- **`path or preset "<name>" not found`** – Built-ins are `mock-echo`, `claude-dm`, `copilot-shell`, `local-llm`. Check spelling or pass a config path.
+- **Copilot errors** – Install GitHub Copilot CLI (`npm i -g @github/copilot`), run `copilot auth login`, then `buddy check copilot-shell`.
+- **Claude/OpenAI HTTP errors** – Confirm API key is set in config, and `buddy check claude-dm` shows the endpoint reachable.
 
-**Relay auth/connection issues**
-- Check relay URLs in config; ensure network reachable. Try a known public relay (e.g., wss://relay.damus.io). Run with `logging.level: debug` to see subscription errors.
+## Wizard
+- **Wizard aborted: missing dependencies** – Install the listed binaries or rerun with `buddy wizard` and confirm when prompted; or run `buddy check <preset>` first.
+- **Overwrite prompt** – Wizard won’t clobber an existing config without confirmation. Pass a new path to write elsewhere.
 
-**BoltDB locked**
-- Symptom: `timeout acquiring file lock` on state.db. Fix: stop other running instance or remove stale lock by removing the DB if data can be discarded.
+## Config and paths
+- Search order: positional/`-config`, then `./config.yaml`, then `~/.config/buddy/config.yaml`.
+- Preset overrides: place custom YAML at `~/.config/buddy/presets/<name>.yaml`.
+- Logs: default stdout; set `logging.file` to write to `~/.buddy/runner.log`.
+- State DB: default `~/.buddy/state.db` unless overridden.
 
-**Missing keys/secrets**
-- Wizard/presets need private key or API keys. Ensure the fields are set; secrets are not loaded from env unless explicitly configured.
+## Relays / transport
+- **Connection refused/timeouts** – Try different relays (`wss://relay.damus.io`, `wss://nos.lol`), or use `mock-echo` to validate the pipeline offline.
+- **`missing allowed_pubkeys`** – Ensure `runner.allowed_pubkeys` has at least one hex npub; wizard will prompt for it.
 
-**Shell action denied**
-- Symptom: `/shell ...` returns allowlist/timeout error. Fix: enable `shell` action in config with `allowed_pubkeys`/roots/timeouts; keep it off for untrusted users.
+## Actions / safety
+- Shell is high risk. Keep `allowed_pubkeys` tight, and prefer `mock-echo` or `claude-dm` until ready.
+- To disable shell in a preset override, remove the `shell` action or set stricter allowlists.
 
-**Output truncated**
-- If replies are cut, increase `runner.max_reply_chars` or `actions.shell.max_output`.
+## Metrics / health
+- Enable health endpoint with `-health-listen 127.0.0.1:8081`; metrics via `-metrics-listen 127.0.0.1:9090`.
 
-**Copilot CLI errors**
-- Ensure `copilot` binary is on PATH and authenticated (`copilot auth login`).
+## Windows
+- Not yet supported; use WSL with the Linux binary.
 
-**Local model not responding**
-- Confirm local endpoint is running; check URL in `local-llm` preset; raise timeout if slow.
+## Still stuck?
+- Run `buddy check <preset>` and share the output (redact secrets).
+- Open an issue with OS/arch, buddy version (`buddy version`), and the failing command/output.
