@@ -18,6 +18,10 @@ func TestParseSubcommand(t *testing.T) {
 	if cmd != "version" || len(rest) != 0 {
 		t.Fatalf("parse subcommand failed")
 	}
+	cmd, rest = parseSubcommand([]string{"presets"})
+	if cmd != "presets" || len(rest) != 0 {
+		t.Fatalf("expected presets routing")
+	}
 	cmd, rest = parseSubcommand([]string{"-config", "x"})
 	if cmd != "run" || len(rest) != 2 {
 		t.Fatalf("expected run fallback")
