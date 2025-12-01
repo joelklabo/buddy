@@ -15,7 +15,13 @@ type Config config.CodexConfig
 
 // Agent wraps the Codex CLI runner.
 type Agent struct {
-	runner *codex.Runner
+	runner runnerIface
+}
+
+// runnerIface allows substitution in tests.
+type runnerIface interface {
+	Run(ctx context.Context, sessionID string, prompt string) (codex.Result, error)
+	ContextWithTimeout(parent context.Context) (context.Context, context.CancelFunc)
 }
 
 func New(cfg Config) *Agent {
