@@ -73,6 +73,10 @@ func Run(ctx context.Context, path string, p Prompter) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	dryRun, err := p.AskConfirm("Dry-run only (preview config without writing)?", false)
+	if err != nil {
+		return "", err
+	}
 
 	cfg := &config.Config{
 		Runner: config.RunnerConfig{
@@ -103,6 +107,11 @@ func Run(ctx context.Context, path string, p Prompter) (string, error) {
 	}
 	if cfg.Logging.Format == "" {
 		cfg.Logging.Format = "text"
+	}
+
+	if dryRun {
+		fmt.Printf("Dry run: config NOT written. Target path would be %s\n", cfgPath)
+		return cfgPath, nil
 	}
 
 	if err := writeConfig(cfgPath, cfg); err != nil {

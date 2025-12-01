@@ -15,6 +15,7 @@ nostr-codex-runner wizard [config-path]
 3) Allowed pubkeys (comma-separated)
 4) Agent choice: http, copilotcli, or echo
 5) Whether to enable shell action (warned as high risk)
+6) Whether to dry-run (preview without writing)
 
 ## What it writes
 - Transport: nostr with your relays and keys
@@ -33,4 +34,5 @@ nostr-codex-runner wizard [config-path]
 ## Notes
 - Uses masked prompts; secrets are not echoed.
 - Respects legacy config/search paths via CLI defaults, but wizard writes to the buddy path by default.
+- Add `--config` to `run` if you wrote to a custom path.
 - Future: will surface presets and mock transport option.
