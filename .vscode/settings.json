@@ -1,0 +1,13 @@
+{
+  "editor.formatOnSave": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "go.lintTool": "golangci-lint",
+  "go.lintOnSave": "workspace",
+  "go.testOnSave": "package",
+  "go.testFlags": ["-count=1"],
+  "go.useLanguageServer": true,
+  "gopls": {
+    "ui.semanticTokens": true
+  }
+}

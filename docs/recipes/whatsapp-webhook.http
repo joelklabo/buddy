@@ -1,0 +1,8 @@
+### Twilio WhatsApp webhook sample (REST Client)
+### Fill in the signature with a valid X-Twilio-Signature for testing.
+
+POST http://localhost:8083/twilio/webhook
+Content-Type: application/x-www-form-urlencoded
+X-Twilio-Signature: <computed-signature>
+
+From=whatsapp%3A15555550100&Body=hello+via+twilio&MessageSid=SM123

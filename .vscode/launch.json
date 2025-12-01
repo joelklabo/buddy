@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug runner (config.yaml)",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/cmd/runner",
+      "args": ["-config", "${workspaceFolder}/config.yaml"]
+    },
+    {
+      "name": "Debug current test file",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${fileDirname}",
+      "args": ["-count=1"]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "make test",
+      "type": "shell",
+      "command": "make",
+      "args": ["test"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$go"
+    },
+    {
+      "label": "make lint",
+      "type": "shell",
+      "command": "make",
+      "args": ["lint"],
+      "problemMatcher": "$go"
+    },
+    {
+      "label": "make run (config.yaml)",
+      "type": "shell",
+      "command": "make",
+      "args": ["run"],
+      "options": {
+        "env": {
+          "CONFIG": "${workspaceFolder}/config.yaml"
+        }
+      }
+    },
+    {
+      "label": "go test whatsapp transport",
+      "type": "shell",
+      "command": "go",
+      "args": ["test", "./internal/transports/whatsapp/..."],
+      "problemMatcher": "$go"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "golang.Go",
+    "ms-vscode.makefile-tools",
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    "redhat.vscode-yaml",
+    "humao.rest-client",
+    "yzhang.markdown-all-in-one",
+    "usernamehw.errorlens"
+  ]
+}
