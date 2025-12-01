@@ -1,55 +1,24 @@
-# Docs Style Guide & Templates – Issue 3oa.10
+# Documentation Style Guide
 
-Tone & voice
-- Direct, concise, imperative. Prefer verbs over adjectives.
-- Keep first screen of each page scannable: short paragraphs, bullets, and code blocks.
-- Avoid hype; state capability and how to do it.
+Tone: concise, friendly, actionable. Prefer second person (“you”), avoid filler, keep sections scannable.
 
-Formatting
-- Headings: sentence case except product names. Avoid deep nesting (>3 levels).
-- Bullets: `-` only; keep to one line when possible.
-- Commands/paths/env vars in backticks; multi-line commands in fenced `bash` blocks.
-- Tables for config fields and presets; keep under 80–90 chars per cell.
-- No trailing prose after code fences; end with punctuation.
+Headings: Title Case, no more than two levels deep per page. Start with a one-line summary under H1 when helpful.
 
-Content patterns
-- Start guides with: What it is → When to use → Steps → Verify → Next steps.
-- Put prerequisites up front (OS/arch, deps, keys).
-- Include a “Verify” step with an expected output snippet.
-- Link to reference docs instead of repeating schema.
+Lists: use `-` bullets; keep lines short; avoid nested lists unless necessary.
 
-Templates
-- **How-to**
-  1) Goal sentence.
-  2) Prereqs.
-  3) Steps (numbered). Each step has a command and expected result.
-  4) Troubleshooting tip if common failure.
+Code fences: use language hints (`bash`, `yaml`, `go`). For commands, show the exact line to paste; keep outputs short.
 
-- **Concept page**
-  1) Definition (short).
-  2) Why it matters / when to choose.
-  3) Components diagram/link.
-  4) Related tasks/recipes.
+Examples: prefer runnable snippets (`buddy run mock-echo`), include expected output when clarifying success.
 
-- **Reference (config/preset)**
-  1) Scope sentence.
-  2) Table of fields with defaults and examples.
-  3) Notes on search order/precedence.
+Links: relative paths within the repo (e.g., `docs/faq.md`), no raw URLs in prose—use link text.
 
-Accessibility/UX
-- Avoid color-dependent meaning; keep text cues.
-- Prefer plain ASCII punctuation; avoid smart quotes.
-- Spell out abbreviations on first use.
+Tables: only when comparing options; keep under ~80 characters per cell.
 
-Linking & cross-ref
-- Relative links within repo; avoid raw URLs in text (use markdown link text).
-- Keep README lean; link to docs index for depth.
+Admonitions: keep to short paragraphs; favor inline notes over long warnings.
 
-Badges and names
-- Use `buddy` as canonical name; mention alias `nostr-buddy` only where collisions matter.
+Accessibility: spell out emoji meaning in text when used for status (e.g., “✅ ok”).
 
-Review checklist (for PRs touching docs)
-- [ ] Quickstart still works as written.
-- [ ] Commands copy-paste friendly.
-- [ ] Secrets not logged or echoed in examples.
-- [ ] Links resolve after repo rename.
+Templates:
+- How-to: Goal → Steps (numbered) → Verify → Troubleshooting.
+- Concept: What/Why → Key terms → How it fits → Links to how-tos.
+- Reference: Field/name → Type/default → Example → Notes.
