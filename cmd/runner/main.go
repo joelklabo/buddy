@@ -18,6 +18,7 @@ import (
 	"nostr-codex-runner/internal/health"
 	"nostr-codex-runner/internal/metrics"
 	"nostr-codex-runner/internal/store"
+	"nostr-codex-runner/internal/wizard"
 	"runtime"
 	"runtime/debug"
 )
@@ -42,6 +43,11 @@ func main() {
 		return
 	case "help", "-h", "--help":
 		usage()
+		return
+	case "wizard":
+		if err := runWizard(args); err != nil {
+			fatalf(err.Error())
+		}
 		return
 	case "run":
 		if err := runContext(context.Background(), args); err != nil {
@@ -207,6 +213,7 @@ func defaultConfigPath() string {
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage:\n")
 	fmt.Fprintf(os.Stderr, "  nostr-codex-runner run [-config path] [-health-listen addr] [-metrics-listen addr]\n")
+	fmt.Fprintf(os.Stderr, "  nostr-codex-runner wizard [config-path]\n")
 	fmt.Fprintf(os.Stderr, "  nostr-codex-runner version\n")
 	fmt.Fprintf(os.Stderr, "  nostr-codex-runner help\n\n")
 	fmt.Fprintf(os.Stderr, "Environment:\n")
@@ -240,4 +247,18 @@ func configSearchOrder() []string {
 		paths = append(paths, filepath.Join(home, ".config", "nostr-codex-runner", "config.yaml")+" (legacy)")
 	}
 	return paths
+}
+
+func runWizard(args []string) error {
+	var path string
+	if len(args) > 0 {
+		path = args[0]
+	}
+	cfgPath, err := wizard.Run(context.Background(), path, nil)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Config written to %s\n", cfgPath)
+	fmt.Printf("Next: run `nostr-codex-runner run -config %s`\n", cfgPath)
+	return nil
 }
