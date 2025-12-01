@@ -21,6 +21,7 @@ type Config struct {
 	Storage  StorageConfig `yaml:"storage"`
 	Logging  LoggingConfig `yaml:"logging"`
 	Projects []Project     `yaml:"projects"`
+	Deps     DepSet        `yaml:"deps,omitempty"`
 
 	Transports []TransportConfig `yaml:"transports"`
 	Agent      AgentConfig       `yaml:"agent"`
