@@ -12,10 +12,10 @@ func TestRunWritesConfig(t *testing.T) {
 	td := t.TempDir()
 	path := filepath.Join(td, "config.yaml")
 	p := &StubPrompter{
+		Selects:   []string{"nostr", "echo"},
 		Inputs:    []string{"wss://relay.example", "deadbeef"},
 		Passwords: []string{"abcd1234"},
-		Selects:   []string{"echo"},
-		Confirms:  []bool{true},
+		Confirms:  []bool{true, false}, // overwrite? enable shell? dry-run?
 	}
 	got, err := Run(context.Background(), path, p)
 	if err != nil {
@@ -38,10 +38,10 @@ func TestRunRequiresAllowedPubkey(t *testing.T) {
 	td := t.TempDir()
 	path := filepath.Join(td, "config.yaml")
 	p := &StubPrompter{
+		Selects:   []string{"nostr", "echo"},
 		Inputs:    []string{"wss://relay.example", ""},
 		Passwords: []string{"abcd1234"},
-		Selects:   []string{"echo"},
-		Confirms:  []bool{false},
+		Confirms:  []bool{false, false},
 	}
 	_, err := Run(context.Background(), path, p)
 	if err == nil {

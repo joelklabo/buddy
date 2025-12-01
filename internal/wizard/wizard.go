@@ -44,24 +44,47 @@ func Run(ctx context.Context, path string, p Prompter) (string, error) {
 		}
 	}
 
-	relays, err := p.AskInput("Relays (comma-separated)", "wss://relay.damus.io,wss://nos.lol")
+	transportChoice, err := p.AskSelect("Transport", []string{"nostr", "mock"}, "nostr")
 	if err != nil {
 		return "", err
 	}
-	priv, err := p.AskPassword("Nostr private key (hex, not nsec)")
-	if err != nil {
-		return "", err
-	}
-	if len(priv) == 0 {
-		return "", errors.New("private key is required")
-	}
-	allowed, err := p.AskInput("Allowed pubkeys (comma-separated hex)", "")
-	if err != nil {
-		return "", err
-	}
-	allowedKeys := splitCSV(allowed)
-	if len(allowedKeys) == 0 {
-		return "", errors.New("at least one allowed pubkey required")
+
+	var relays string
+	var priv string
+	var allowedKeys []string
+
+	if transportChoice == "nostr" {
+		if relays, err = p.AskInput("Relays (comma-separated)", "wss://relay.damus.io,wss://nos.lol"); err != nil {
+			return "", err
+		}
+
+		for retries := 0; retries < 2; retries++ {
+			priv, err = p.AskPassword("Nostr private key (hex, not nsec)")
+			if err != nil {
+				return "", err
+			}
+			if len(priv) > 0 {
+				break
+			}
+		}
+		if len(priv) == 0 {
+			return "", errors.New("private key is required")
+		}
+
+		var allowed string
+		for retries := 0; retries < 2; retries++ {
+			allowed, err = p.AskInput("Allowed pubkeys (comma-separated hex)", "")
+			if err != nil {
+				return "", err
+			}
+			allowedKeys = splitCSV(allowed)
+			if len(allowedKeys) > 0 {
+				break
+			}
+		}
+		if len(allowedKeys) == 0 {
+			return "", errors.New("at least one allowed pubkey required")
+		}
 	}
 
 	agentChoice, err := p.AskSelect("Agent", []string{"http", "copilotcli", "echo"}, "http")
@@ -83,19 +106,30 @@ func Run(ctx context.Context, path string, p Prompter) (string, error) {
 			PrivateKey:     priv,
 			AllowedPubkeys: allowedKeys,
 		},
-		Storage: config.StorageConfig{Path: defaultStatePath()},
-		Transports: []config.TransportConfig{{
-			Type:   "nostr",
-			ID:     "nostr",
-			Relays: splitCSV(relays),
-		}},
-		Agent: config.AgentConfig{Type: agentChoice},
+		Storage:    config.StorageConfig{Path: defaultStatePath()},
+		Transports: []config.TransportConfig{},
+		Agent:      config.AgentConfig{Type: agentChoice},
 		Actions: []config.ActionConfig{{
 			Type:  "readfile",
 			Name:  "readfile",
 			Roots: []string{"."},
 		}},
 		Projects: []config.Project{{ID: "default", Name: "default", Path: "."}},
+	}
+
+	if transportChoice == "nostr" {
+		cfg.Transports = append(cfg.Transports, config.TransportConfig{
+			Type:           "nostr",
+			ID:             "nostr",
+			Relays:         splitCSV(relays),
+			PrivateKey:     priv,
+			AllowedPubkeys: allowedKeys,
+		})
+	} else {
+		cfg.Transports = append(cfg.Transports, config.TransportConfig{
+			Type: "mock",
+			ID:   "mock",
+		})
 	}
 
 	if enableShell {
