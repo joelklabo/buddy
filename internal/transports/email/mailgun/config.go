@@ -10,6 +10,8 @@ type Config struct {
 	SigningKey   string        `yaml:"signing_key" json:"signing_key"`
 	BaseURL      string        `yaml:"base_url" json:"base_url"`
 	RoutePrefix  string        `yaml:"route_prefix" json:"route_prefix"`
+	Listen       string        `yaml:"listen" json:"listen"`
+	Path         string        `yaml:"path" json:"path"`
 	AllowSenders []string      `yaml:"allow_senders" json:"allow_senders"`
 	MaxBytes     int           `yaml:"max_bytes" json:"max_bytes"`
 	Timeout      time.Duration `yaml:"timeout" json:"timeout"`
@@ -22,6 +24,12 @@ func (c *Config) Defaults() {
 	}
 	if c.RoutePrefix == "" {
 		c.RoutePrefix = ""
+	}
+	if c.Listen == "" {
+		c.Listen = ":8088"
+	}
+	if c.Path == "" {
+		c.Path = "/email/inbound"
 	}
 	if c.MaxBytes == 0 {
 		c.MaxBytes = 262144 // 256 KiB
@@ -43,6 +51,12 @@ func (c *Config) Validate() error {
 	}
 	if c.SigningKey == "" {
 		return Err("signing_key is required")
+	}
+	if c.Listen == "" {
+		return Err("listen is required")
+	}
+	if c.Path == "" {
+		return Err("path is required")
 	}
 	if len(c.AllowSenders) == 0 {
 		return Err("allow_senders must include at least one sender")

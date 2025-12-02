@@ -40,9 +40,33 @@ func (t *Transport) ID() string {
 // Start registers an HTTP handler; caller must wire the route. We keep a handler factory
 // so Start stays non-blocking for compatibility with other transports.
 func (t *Transport) Start(ctx context.Context, inbound chan<- core.InboundMessage) error {
-	// non-blocking: caller should mount Handler() on their mux
-	<-ctx.Done()
-	return ctx.Err()
+	mux := http.NewServeMux()
+	mux.Handle(t.cfg.Path, t.Handler(inbound))
+
+	srv := &http.Server{
+		Addr:         t.cfg.Listen,
+		Handler:      mux,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	errCh := make(chan error, 1)
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			errCh <- err
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = srv.Shutdown(shutdownCtx)
+		return ctx.Err()
+	case err := <-errCh:
+		return err
+	}
 }
 
 // Handler returns an http.Handler that processes Mailgun webhooks.

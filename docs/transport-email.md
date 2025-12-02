@@ -12,16 +12,17 @@ Goal: Add email as a transport for buddy. Phase 1 uses Mailgun inbound webhooks 
 ```yaml
 transports:
   - type: email
-    mode: mailgun            # or imap
-    id: email
-    allow_senders: ["alice@example.com"]
-    mailgun:
+    config:
+      mode: mailgun            # or imap
+      id: email
+      listen: ":8088"          # where to receive webhooks
+      path: /email/inbound
+      allow_senders: ["alice@example.com"]
       domain: mg.example.com
       api_key: $MAILGUN_API_KEY
       signing_key: $MAILGUN_SIGNING_KEY
       base_url: https://api.mailgun.net/v3
       route_prefix: buddy+    # optional; route to POST /email/inbound
-    limits:
       max_bytes: 262144
 ```
 

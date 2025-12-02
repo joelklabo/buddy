@@ -15,6 +15,7 @@ import (
 	"github.com/joelklabo/buddy/internal/config"
 	"github.com/joelklabo/buddy/internal/core"
 	"github.com/joelklabo/buddy/internal/store"
+	memg "github.com/joelklabo/buddy/internal/transports/email/mailgun"
 	tmock "github.com/joelklabo/buddy/internal/transports/mock"
 	tnostr "github.com/joelklabo/buddy/internal/transports/nostr"
 	twa "github.com/joelklabo/buddy/internal/transports/whatsapp"
@@ -33,6 +34,28 @@ func Build(cfg *config.Config, st *store.Store, logger *slog.Logger) (*core.Runn
 			transports = append(transports, nt)
 		case "mock":
 			transports = append(transports, tmock.New(t.ID))
+		case "email":
+			mode, _ := t.Config["mode"].(string)
+			if mode == "" {
+				mode = "mailgun"
+			}
+			switch mode {
+			case "mailgun":
+				var mcfg memg.Config
+				if err := decodeMap(t.Config, &mcfg); err != nil {
+					return nil, fmt.Errorf("decode mailgun config: %w", err)
+				}
+				if mcfg.ID == "" {
+					mcfg.ID = t.ID
+				}
+				mt, err := memg.New(mcfg)
+				if err != nil {
+					return nil, err
+				}
+				transports = append(transports, mt)
+			default:
+				return nil, fmt.Errorf("unknown email mode %s", mode)
+			}
 		case "whatsapp":
 			var wcfg twa.Config
 			if err := decodeMap(t.Config, &wcfg); err != nil {
