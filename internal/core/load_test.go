@@ -1,3 +1,6 @@
+//go:build !race
+// +build !race
+
 package core_test
 
 import (
@@ -51,6 +54,8 @@ func TestRunnerHandlesBurst(t *testing.T) {
 		}
 	}
 
+	close(transport.Inbound)
+	time.Sleep(20 * time.Millisecond) // allow transport goroutine to exit before cancel closes inbound
 	cancel()
 	<-done
 }

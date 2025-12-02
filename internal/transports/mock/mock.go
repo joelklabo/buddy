@@ -31,7 +31,10 @@ func (t *Transport) Start(ctx context.Context, in chan<- core.InboundMessage) er
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case msg := <-t.Inbound:
+		case msg, ok := <-t.Inbound:
+			if !ok {
+				return nil
+			}
 			in <- msg
 		}
 	}
