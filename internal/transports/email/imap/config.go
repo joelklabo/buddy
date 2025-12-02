@@ -13,6 +13,9 @@ type Config struct {
 	SMTPHost string `yaml:"smtp_host" json:"smtp_host"`
 	SMTPPort int    `yaml:"smtp_port" json:"smtp_port"`
 	SMTPTLS  bool   `yaml:"smtp_tls" json:"smtp_tls"`
+
+	AllowSenders []string `yaml:"allow_senders" json:"allow_senders"`
+	MaxBytes     int      `yaml:"max_bytes" json:"max_bytes"`
 }
 
 func (c *Config) Defaults() {
@@ -31,11 +34,17 @@ func (c *Config) Defaults() {
 	if c.SMTPHost == "" {
 		c.SMTPHost = c.Host
 	}
+	if c.MaxBytes == 0 {
+		c.MaxBytes = 262144 // 256 KiB
+	}
 }
 
 func (c *Config) Validate() error {
 	if c.Host == "" || c.Username == "" || c.Password == "" {
 		return Err("host, username, password are required")
+	}
+	if len(c.AllowSenders) == 0 {
+		c.AllowSenders = []string{c.Username}
 	}
 	return nil
 }

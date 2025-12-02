@@ -90,6 +90,14 @@ func (t *Transport) pollOnce(ctx context.Context, inbound chan<- core.InboundMes
 				body.Write(b)
 			}
 		}
+
+		if !t.allowed(from) {
+			continue
+		}
+		if body.Len() > t.cfg.MaxBytes {
+			continue
+		}
+
 		inbound <- core.InboundMessage{
 			Transport: t.ID(),
 			Sender:    from,
@@ -109,4 +117,14 @@ func (t *Transport) Send(ctx context.Context, msg core.OutboundMessage) error {
 	to := []string{msg.Recipient}
 	data := fmt.Sprintf("Subject: buddy reply\r\nIn-Reply-To: %s\r\n\r\n%s", msg.ThreadID, msg.Text)
 	return smtp.SendMail(fmt.Sprintf("%s:%d", t.cfg.SMTPHost, t.cfg.SMTPPort), auth, t.cfg.Username, to, []byte(data))
+}
+
+func (t *Transport) allowed(sender string) bool {
+	s := strings.ToLower(strings.TrimSpace(sender))
+	for _, a := range t.cfg.AllowSenders {
+		if strings.ToLower(a) == s {
+			return true
+		}
+	}
+	return false
 }

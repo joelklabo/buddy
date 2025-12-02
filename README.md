@@ -86,6 +86,7 @@ flowchart LR
 - Presets & overrides: `docs/presets.md`
 - Offline local LLM (mock): `docs/recipes/local-llm-mock.md`
 - Email transport design: `docs/transport-email.md`
+- IMAP/SMTP (beta): `docs/email-imap.md`
 - Logging/PII safety: `docs/logging-safety.md`
 - CLI surface/config search/FAQ: `docs/readme-details.md`
 - Release checklist: `docs/release-checklist.md`
