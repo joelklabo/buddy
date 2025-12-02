@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/joelklabo/buddy/internal/core"
+	"sync/atomic"
 )
 
 // Transport implements core.Transport backed by Mailgun inbound webhooks for inbound
@@ -16,6 +17,7 @@ import (
 type Transport struct {
 	cfg    Config
 	client *Client
+	lastOK atomic.Value
 }
 
 // New builds a Transport from Config (call Defaults/Validate upstream).
@@ -42,6 +44,7 @@ func (t *Transport) ID() string {
 func (t *Transport) Start(ctx context.Context, inbound chan<- core.InboundMessage) error {
 	mux := http.NewServeMux()
 	mux.Handle(t.cfg.Path, t.Handler(inbound))
+	mux.HandleFunc("/health", t.healthHandler)
 
 	srv := &http.Server{
 		Addr:         t.cfg.Listen,
@@ -113,6 +116,8 @@ func (t *Transport) Handler(inbound chan<- core.InboundMessage) http.Handler {
 			},
 		}
 
+		t.lastOK.Store(time.Now())
+
 		w.WriteHeader(http.StatusAccepted)
 	})
 }
@@ -137,6 +142,21 @@ func (t *Transport) allowed(sender string) bool {
 		}
 	}
 	return false
+}
+
+func (t *Transport) healthHandler(w http.ResponseWriter, r *http.Request) {
+	last, _ := t.lastOK.Load().(time.Time)
+	if last.IsZero() {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = w.Write([]byte("no mail received yet"))
+		return
+	}
+	if time.Since(last) > 5*time.Minute {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = w.Write([]byte("stale inbound"))
+		return
+	}
+	_, _ = w.Write([]byte("ok"))
 }
 
 // Client wraps minimal Mailgun send.
