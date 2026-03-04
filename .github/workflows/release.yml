@@ -23,7 +23,7 @@ jobs:
       - name: Set up cosign
         uses: sigstore/cosign-installer@v3.6.0
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest
