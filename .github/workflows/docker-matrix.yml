@@ -35,7 +35,7 @@ jobs:
           tags: buddy:${{ github.sha }}
           outputs: type=oci,dest=/tmp/image.tar
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: image-${{ matrix.label }}
           path: /tmp/image.tar
